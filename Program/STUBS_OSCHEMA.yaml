@@ -1,0 +1,151 @@
+http_stubs:
+  # Match by schema - centro 368
+  - name: generacion-guias-xdu-centro-368
+    method: POST
+    path: /liverpool/4pl/api/generacionGuias
+    headers:
+      Content-Type: application/json
+    # Just validate these fields exist (any values OK)
+    require_fields:
+      - auth.id_solicitante
+      - hdr.remitente.centro
+      - hdr.remitente.empresa
+    response:
+      status: 202
+      headers:
+        Content-Type: application/json
+      body: |
+        {
+          "tipo_respuesta": "OK",
+          "respuesta": "Guía generada exitosamente para Centro 368",
+          "guia": "GU123456789MX",
+          "tiempo_respuesta": 150,
+          "id_peticion": "PS0990000036",
+          "status": 1,
+          "empresa": "00009",
+          "mensajeria": "DHL",
+          "referencia": "990000036-100004672",
+          "existeNotificacion": true,
+          "etiquetas": ["ETQ-001"],
+          "date": "2025-11-04T12:00:00Z",
+          "tipo_guia_etiqueta": "PDF",
+          "guia_tipo_3pl": "3PL-TYPE-A",
+          "tipo_envio": "EXPRESS"
+        }
+
+  # Full schema validation - all fields
+  - name: generacion-guias-full-schema
+    method: POST
+    path: /liverpool/4pl/api/generacionGuias
+    headers:
+      Content-Type: application/json
+    # Validate complete schema
+    require_fields:
+      - auth.id_solicitante
+      - auth.token
+      - hdr.remitente.id_solicitante
+      - hdr.remitente.id_peticion
+      - hdr.remitente.usuario
+      - hdr.remitente.empresa
+      - hdr.remitente.remision
+      - hdr.remitente.referencia
+      - hdr.remitente.boce
+      - hdr.remitente.centro
+      - hdr.remitente.cp_centro
+      - hdr.destinatario.nombre_cliente
+      - hdr.destinatario.email_cliente
+      - hdr.destinatario.cp_cliente
+      - lat
+      - lng
+      - articulo
+    response:
+      status: 202
+      headers:
+        Content-Type: application/json
+      body: |
+        {
+          "tipo_respuesta": "OK",
+          "respuesta": "Guía generada exitosamente",
+          "guia": "GU123456789MX",
+          "tiempo_respuesta": 150,
+          "id_peticion": "PS0990000036",
+          "status": 1,
+          "empresa": "00009",
+          "mensajeria": "DHL",
+          "referencia": "990000036-100004672",
+          "existeNotificacion": true,
+          "etiquetas": ["ETQ-001", "ETQ-002"],
+          "date": "2025-11-04T14:00:00Z",
+          "tipo_guia_etiqueta": "PDF",
+          "guia_tipo_3pl": "3PL-TYPE-A",
+          "tipo_envio": "EXPRESS"
+        }
+
+  # Default/fallback - matches any POST to this path (no validation)
+  - name: generacion-guias-default
+    method: POST
+    path: /liverpool/4pl/api/generacionGuias
+    response:
+      status: 202
+      headers:
+        Content-Type: application/json
+      body: |
+        {
+          "tipo_respuesta": "OK",
+          "respuesta": "Solicitud procesada (default)",
+          "guia": "GU999999999MX",
+          "tiempo_respuesta": 100,
+          "status": 1,
+          "empresa": "00009",
+          "mensajeria": "DHL",
+          "referencia": "REF-DEFAULT"
+        }
+
+  # Health check
+  - name: health
+    method: GET
+    path: /health
+    response:
+      status: 200
+      headers:
+        Content-Type: application/json
+      body: '{"status": "ok", "service": "4pl-api-stub"}'
+
+  # Estatus endpoint - schema validation
+  - name: estatus-schema
+    method: POST
+    path: /liverpool/4pl/api/estatus
+    headers:
+      Content-Type: application/json
+    require_fields:
+      - thirdPL
+      - tn_reference
+      - tracking_number
+      - code
+      - date
+    response:
+      status: 200
+      headers:
+        Content-Type: application/json
+      body: |
+        {
+          "tipo_respuesta": "OK",
+          "respuesta": "Estatus actualizado correctamente",
+          "status": 1,
+          "tracking_number": "7015009836112700046293",
+          "tn_reference": "QD10007830-100004672",
+          "thirdPL": "ETF",
+          "code": "Recibido por estafeta",
+          "date": "2024-03-04 11:52:00",
+          "mensaje": "El paquete ha sido recibido por Estafeta"
+        }
+
+tcp_stubs:
+  # Your TCP stub
+  - name: tcp-protocol
+    port: 8001
+    validate_request: true
+    min_length: 398
+    max_length: 398
+    response_hex: "0104f0f8d3e5f0f0f0f1f120200004f0000001000108f200000000000000001300009003582006f1f138f0f1404040404040404040f5f0f040c59999969940c485a283969596838984967a40c59999960180f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f01c653030"
+    close_after: true
