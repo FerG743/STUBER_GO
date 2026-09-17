@@ -317,13 +317,6 @@ func (s *TCPStubServer) validateRequest(data []byte, stub *TCPStub) (bool, strin
 	return true, "OK"
 }
 
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
-
 // applyFieldCopies splices byte ranges from the received request into the response,
 // in place, so the response reflects request-specific values instead of always being
 // the same recorded sample. Out-of-bounds fields are skipped and logged rather than

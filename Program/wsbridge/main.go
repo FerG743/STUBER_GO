@@ -125,13 +125,6 @@ func (b *Bridge) handleHealth(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(`{"status":"🍆 toi bien 🍆","service":"websocket-tcp-bridge"}`))
 }
 
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
-
 // profiles maps a named deployment target to its TCP backend address, so
 // switching between a local Mac test run and the server deploy is one flag
 // instead of remembering/typing the prod IP each time.
