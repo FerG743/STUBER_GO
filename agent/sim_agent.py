@@ -238,6 +238,8 @@ def start(stub_name, yaml_text, port, outcome_name, pinned_code, ttl_minutes, ow
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         bufsize=1,
     )
 
