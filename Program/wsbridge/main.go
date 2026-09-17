@@ -132,13 +132,36 @@ func min(a, b int) int {
 	return b
 }
 
+// profiles maps a named deployment target to its TCP backend address, so
+// switching between a local Mac test run and the server deploy is one flag
+// instead of remembering/typing the prod IP each time.
+var profiles = map[string]struct {
+	Host string
+	Port int
+}{
+	"local": {"localhost", 8001},
+	"prod":  {"172.22.64.229", 8001},
+}
+
 func main() {
 	wsPort := flag.Int("ws-port", 9090, "WebSocket server port")
-	tcpHost := flag.String("tcp-host", "localhost", "TCP backend host")
-	tcpPort := flag.Int("tcp-port", 8001, "TCP backend port")
+	env := flag.String("env", "local", "backend profile: local|prod")
+	tcpHost := flag.String("tcp-host", "", "TCP backend host (overrides --env)")
+	tcpPort := flag.Int("tcp-port", 0, "TCP backend port (overrides --env)")
 	flag.Parse()
 
-	bridge := NewBridge(*tcpHost, *tcpPort)
+	profile, ok := profiles[*env]
+	if !ok {
+		log.Fatalf("unknown --env %q (want local|prod)", *env)
+	}
+	if *tcpHost != "" {
+		profile.Host = *tcpHost
+	}
+	if *tcpPort != 0 {
+		profile.Port = *tcpPort
+	}
+
+	bridge := NewBridge(profile.Host, profile.Port)
 
 	http.HandleFunc("/ws", bridge.handleWebSocket)
 	http.HandleFunc("/health", bridge.handleHealth)

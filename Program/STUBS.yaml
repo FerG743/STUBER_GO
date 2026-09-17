@@ -112,11 +112,73 @@ http_stubs:
       body: '{"status": "ok", "service": "4pl-api-stub"}'
 
 tcp_stubs:
-  # Your TCP stub
+  # Recarga de tiempo aire (MTC1) - 396-character hex request, approved/declined response
   - name: tcp-protocol
     port: 8001
     validate_request: true
-    min_length: 398
-    max_length: 398
-    response_hex: "0104f0f8d3e5f0f0f0f1f120200004f0000001000108f200000000000000001300009003582006f1f138f0f1404040404040404040f5f0f040c59999969940c485a283969596838984967a40c59999960180f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f01c653030"
+    min_length: 396
+    max_length: 396
     close_after: true
+    # Two possible outcomes, picked at random (uniform by default - see weight)
+    # for every request. Offsets below are all into the raw wire bytes (they
+    # include the 2-byte length prefix on both request and response).
+    responses:
+      # Captured verbatim from the 26/01/28 16:08 trace. Field 'q' (response
+      # byte 145) is a tagged field block; 'e'=00 (Base24 approval/decline
+      # code - see the two code lists below), 'g'="APROBADA", 'h'=auth code,
+      # 'i'=trace number, 'q' embeds the MSISDN.
+      - name: APROBADA
+        weight: 1
+        response_hex: "0104f0f8d3e5f0f0f0f2f120200002f00173960030860100000001303030303030303934353835f1f138f0f040f0f0f1f6f2f3f5f2c1d7d9d6c2c1c4c1404040404040404040404040404040404040400000f0f0f0f0f0f0f0f0f0f0999999999999000000000000000000001c6530301c674150524f424144411c68303031303234303734201c693030303030303033301c713b303030303030313033333033303832333d303030303f1c361e453032301e493438341e4831201e563003000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        copy_fields:
+          - name: msisdn
+            request_offset: 54
+            response_offset: 154
+            length: 10
+        random_fields:
+          - name: auth_code
+            response_offset: 124
+            length: 9
+          - name: trace_number
+            response_offset: 136
+            length: 9
+          # B24 approval codes (0-10). All approve, but a real switch varies
+          # which one it sends depending on why - see B24 reference table.
+          - name: approval_code
+            response_offset: 110
+            length: 2
+            values: ["00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10"]
+
+      # NOT a captured trace - we don't have a real decline sample yet. Built
+      # by editing the APROBADA bytes above: 'g' "APROBADA"->"DECLINADA" (+1
+      # byte, which shifts every offset after it by 1 vs. the approved
+      # variant - already accounted for below). 'e' is left at a plausible
+      # default ("50" = generic Declined) but is always overwritten by
+      # random_fields below anyway. Swap in the real captured bytes here as
+      # soon as you have one.
+      - name: DECLINADA
+        weight: 1
+        response_hex: "0105f0f8d3e5f0f0f0f2f120200002f00173960030860100000001303030303030303934353835f1f138f0f040f0f0f1f6f2f3f5f2c1d7d9d6c2c1c4c1404040404040404040404040404040404040400000f0f0f0f0f0f0f0f0f0f0999999999999000000000000000000001c6535301c674445434c494e4144411c68303031303234303734201c693030303030303033301c713b303030303030313033333033303832333d303030303f1c361e453032301e493438341e4831201e563003000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        copy_fields:
+          - name: msisdn
+            request_offset: 54
+            response_offset: 155
+            length: 10
+        random_fields:
+          - name: auth_code
+            response_offset: 125
+            length: 9
+          - name: trace_number
+            response_offset: 137
+            length: 9
+          # 'e' sits before the 'g' text field, so its offset is unaffected
+          # by DECLINADA's +1 byte shift - same wire offset as APROBADA above.
+          # B24 decline codes (50-99) - see B24 reference table.
+          - name: decline_code
+            response_offset: 110
+            length: 2
+            values: ["50", "51", "52", "53", "54", "55", "56", "57", "58", "59",
+                     "60", "61", "62", "63", "64", "65", "66", "67", "68", "69",
+                     "70", "71", "72", "73", "74", "75", "76", "77", "78", "79",
+                     "80", "81", "82", "83", "84", "85", "86", "87", "88", "89",
+                     "90", "91", "92", "93", "94", "95", "96", "97", "98", "99"]
