@@ -182,3 +182,55 @@ tcp_stubs:
                      "70", "71", "72", "73", "74", "75", "76", "77", "78", "79",
                      "80", "81", "82", "83", "84", "85", "86", "87", "88", "89",
                      "90", "91", "92", "93", "94", "95", "96", "97", "98", "99"]
+
+  # Recarga de tiempo aire - Suburbia (86-SOLICITUD/RESPUESTA). Different wire
+  # format from the Liverpool stub above: fixed-width EBCDIC/BCD fields
+  # instead of tagged fields, so it needs its own port (can't share 8001 -
+  # TCPStubServer keys one stub per port). Captured verbatim from the
+  # 26/08/03 13:46 trace (record 7172 request / 7190 response); every field
+  # below was cross-checked byte-for-byte against that trace's own parsed
+  # field dump. Only an approved (code 01) sample exists - no declined
+  # Suburbia trace yet, so unlike the Liverpool stub there's no decline
+  # variant here. Swap in a real declined capture when one shows up.
+  - name: tiempo-aire-suburbia
+    port: 8002
+    validate_request: true
+    min_length: 396
+    max_length: 396
+    close_after: true
+    responses:
+      - name: APROBADA
+        weight: 1
+        response_hex: "0104f0f8e2c2f0f5f5f8f120200005f00019030032860100005000000000000000000000000000f1f138f0f040f3f9f0f6f1f1f8f0e3d9c1d5e2c1c3c3c9d6d540c1d7d9d6c2c1c4c1404040404040400000f0f0f0f0f0f0f0f0f0f09999999999990000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002020202020202020202020202020202020202020"
+        # Offsets include the 2-byte length prefix on both request and
+        # response wire bytes (same convention as the Liverpool stub above).
+        # Everything through Monto Regular sits at the same offset in both
+        # request and response, so each field just echoes straight across;
+        # Referencia ACC does NOT echo (the real switch zeroes it in the
+        # response) and Codigo Respuesta (offset 22) isn't copied - it's the
+        # approval code, baked fixed into response_hex above.
+        copy_fields:
+          - name: numero_tienda
+            request_offset: 6
+            response_offset: 6
+            length: 5
+          - name: id_terminal
+            request_offset: 13
+            response_offset: 13
+            length: 2
+          - name: indicadores
+            request_offset: 16
+            response_offset: 16
+            length: 3
+          - name: consecutivo_mensaje
+            request_offset: 19
+            response_offset: 19
+            length: 2
+          - name: codigo_transaccion
+            request_offset: 21
+            response_offset: 21
+            length: 1
+          - name: monto_regular
+            request_offset: 23
+            response_offset: 23
+            length: 4

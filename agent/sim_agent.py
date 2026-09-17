@@ -81,8 +81,10 @@ _CONNECTION_RE = re.compile(r"Connection from (\S+)")
 _LISTEN_ERROR_RE = re.compile(r"\[TCP\] Stub (\S+) error: (.+)")
 
 _LOCK = threading.Lock()
-# Keyed by stubName (the YAML `name:` of the tcp_stubs entry — one port each,
-# so this also identifies "which message type").
+# Keyed by stubName, which maps to one running process built from a YAML
+# config. That config can bundle several tcp_stubs entries (e.g. Liverpool +
+# Suburbia variants of the same message on their own ports) so one run/build
+# covers both instead of spending a process per variant on this machine.
 _RUNS = {}
 _LOGS = {}       # stubName -> [{seq, ts, line}]
 _LOG_SEQ = {}    # stubName -> int
@@ -93,7 +95,7 @@ _NEW_RUN = {
     "timer": None,
     "run_id": 0,
     "status": "stopped",
-    "port": None,
+    "ports": [],
     "outcomeName": None,
     "pinnedCode": None,
     "startedAt": None,
@@ -187,7 +189,7 @@ def _expire(stub_name, run_id):
     _append_log(stub_name, f"[agent] Límite de tiempo alcanzado ({ttl} min) — deteniendo automáticamente")
 
 
-def start(stub_name, yaml_text, port, outcome_name, pinned_code, ttl_minutes, owner_id):
+def start(stub_name, yaml_text, ports, outcome_name, pinned_code, ttl_minutes, owner_id):
     try:
         ttl_minutes = int(ttl_minutes)
     except (TypeError, ValueError):
@@ -257,7 +259,7 @@ def start(stub_name, yaml_text, port, outcome_name, pinned_code, ttl_minutes, ow
                 "process": proc,
                 "timer": timer,
                 "status": "running",
-                "port": port,
+                "ports": ports,
                 "outcomeName": outcome_name,
                 "pinnedCode": pinned_code,
                 "startedAt": now,
@@ -305,13 +307,17 @@ def logs_since(stub_name, seq):
         return [entry for entry in _LOGS.get(stub_name, []) if entry["seq"] > seq]
 
 
-def send_test_request(stub_name, hex_payload, timeout=5):
+def send_test_request(stub_name, hex_payload, port=None, timeout=5):
     with _LOCK:
         run = _RUNS.get(stub_name)
-        port = run["port"] if run else None
+        ports = run["ports"] if run else []
         running = run["status"] == "running" if run else False
-    if not running or not port:
+    if not running or not ports:
         raise RuntimeError("El stub no está corriendo")
+    if port is None:
+        port = ports[0]
+    elif port not in ports:
+        raise RuntimeError(f"Este stub no escucha en el puerto {port} (usa uno de {ports})")
     data = bytes.fromhex(hex_payload)
     with socket.create_connection(("127.0.0.1", port), timeout=timeout) as sock:
         sock.sendall(data)
@@ -360,10 +366,19 @@ class Handler(BaseHTTPRequestHandler):
                 stub_name = body.get("stubName")
                 if not stub_name or not body.get("yaml"):
                     return self._send_json(400, {"error": "Falta stubName o el YAML de configuración"})
+                # Accept either "ports" (a run can bundle several tcp_stubs
+                # entries - e.g. Liverpool + Suburbia in one process/port
+                # pair) or the older singular "port", for callers still on
+                # the one-port-per-run shape.
+                ports = body.get("ports")
+                if not ports and body.get("port"):
+                    ports = [body["port"]]
+                if not ports:
+                    return self._send_json(400, {"error": "Falta ports (o port)"})
                 result = start(
                     stub_name,
                     body["yaml"],
-                    body.get("port"),
+                    ports,
                     body.get("outcomeName", ""),
                     body.get("pinnedCode"),
                     body.get("ttlMinutes"),
@@ -381,7 +396,7 @@ class Handler(BaseHTTPRequestHandler):
                 stub_name = body.get("stubName")
                 if not stub_name or not body.get("hex"):
                     return self._send_json(400, {"error": "Falta stubName o el request en hex"})
-                response_hex = send_test_request(stub_name, body["hex"])
+                response_hex = send_test_request(stub_name, body["hex"], port=body.get("port"))
                 return self._send_json(200, {"responseHex": response_hex})
             return self._send_json(404, {"error": "not found"})
         except PermissionError as e:
