@@ -122,16 +122,37 @@ tcp_stubs:
     # Two possible outcomes, picked at random (uniform by default - see weight)
     # for every request. Offsets below are all into the raw wire bytes (they
     # include the 2-byte length prefix on both request and response).
+    #
+    # Cross-checked against the SPDH Messages Dictionary for transaction code
+    # "86" (Autorizacion Tiempo Aire). Confirmed field mapping (wire offset =
+    # spec payload offset + 2 for the length prefix):
+    #   F009 Codigo_Transaccion  wire[21]     "86" (fixed, both variants)
+    #   F010 Codigo_Respuesta    wire[22]     "01" Aprobado / "02" Declinado / "04" Vale impreso
+    #   F015.04 Descripcion      wire[53:80]  free-text description - this is where
+    #                            (+1 shifted    "APROBADA"/"DECLINADA" actually lives (not a
+    #                            for DECLINADA) standalone tagged field as originally assumed)
+    # Everything from wire[82:] onward (F017 Info_Gral_Usuario) is a vendor/proprietary
+    # blob the SPDH dictionary itself marks "N/A (Cualquiera)" - the tagged sub-fields
+    # below ('e','g','h','i','q' in the original trace notes, incl. copy_fields/
+    # approval_code/decline_code) live in there and are NOT covered by that spec.
     responses:
       # Captured verbatim from the 26/01/28 16:08 trace. Field 'q' (response
-      # byte 145) is a tagged field block; 'e'=00 (Base24 approval/decline
-      # code - see the two code lists below), 'g'="APROBADA", 'h'=auth code,
-      # 'i'=trace number, 'q' embeds the MSISDN.
+      # byte 145, inside the undocumented F017 blob) is a tagged field block;
+      # 'e'=00 (a proprietary status byte, unrelated to spec field F010 above -
+      # see the two code lists below), 'g'="APROBADA", 'h'=auth code,
+      # 'i'=trace number, 'q' embeds a value echoed from the request (see
+      # copy_fields note below - likely the SKU, not the MSISDN).
       - name: APROBADA
         weight: 1
         response_hex: "0104f0f8d3e5f0f0f0f2f120200002f00173960030860100000001303030303030303934353835f1f138f0f040f0f0f1f6f2f3f5f2c1d7d9d6c2c1c4c1404040404040404040404040404040404040400000f0f0f0f0f0f0f0f0f0f0999999999999000000000000000000001c6530301c674150524f424144411c68303031303234303734201c693030303030303033301c713b303030303030313033333033303832333d303030303f1c361e453032301e493438341e4831201e563003000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
         copy_fields:
-          - name: msisdn
+          # request_offset 54 (wire) = payload offset 52, which per the SPDH
+          # dictionary is exactly F014.01 Numero_SKU (10 bytes, ASCII) - not a
+          # phone number. Kept the field name for backward compat with
+          # whatever consumed it before; the real MSISDN in the request lives
+          # in F012 Referencia_ACC (wire[27:39]) or F014.02 Numero_Telefono
+          # (wire[64:79]) if a future stub needs to echo the actual phone.
+          - name: msisdn # NOTE: actually echoes Numero_SKU, see comment above
             request_offset: 54
             response_offset: 154
             length: 10
@@ -142,8 +163,10 @@ tcp_stubs:
           - name: trace_number
             response_offset: 136
             length: 9
-          # B24 approval codes (0-10). All approve, but a real switch varies
-          # which one it sends depending on why - see B24 reference table.
+          # Proprietary status byte inside the undocumented F017 blob - NOT
+          # the spec's F010 Codigo_Respuesta (that's fixed at wire[22]="01").
+          # Value list below is an unverified guess (Base24-style codes),
+          # since SPDH doesn't document this blob's internal layout.
           - name: approval_code
             response_offset: 110
             length: 2
@@ -156,11 +179,20 @@ tcp_stubs:
       # default ("50" = generic Declined) but is always overwritten by
       # random_fields below anyway. Swap in the real captured bytes here as
       # soon as you have one.
+      #
+      # Verified against SPDH: total length trimmed back to 262 bytes (the
+      # +1 byte from the text swap must not change the fixed frame size), and
+      # spec field F010 Codigo_Respuesta (wire[22]) corrected to "02"
+      # (Declinado) - it had been left at "01" (Aprobado), copied verbatim
+      # from APROBADA, which the SPDH dictionary now shows is wrong for a
+      # decline response.
       - name: DECLINADA
         weight: 1
-        response_hex: "0105f0f8d3e5f0f0f0f2f120200002f00173960030860100000001303030303030303934353835f1f138f0f040f0f0f1f6f2f3f5f2c1d7d9d6c2c1c4c1404040404040404040404040404040404040400000f0f0f0f0f0f0f0f0f0f0999999999999000000000000000000001c6535301c674445434c494e4144411c68303031303234303734201c693030303030303033301c713b303030303030313033333033303832333d303030303f1c361e453032301e493438341e4831201e563003000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        response_hex: "0105f0f8d3e5f0f0f0f2f120200002f00173960030860200000001303030303030303934353835f1f138f0f040f0f0f1f6f2f3f5f2c1d7d9d6c2c1c4c1404040404040404040404040404040404040400000f0f0f0f0f0f0f0f0f0f0999999999999000000000000000000001c6535301c674445434c494e4144411c68303031303234303734201c693030303030303033301c713b303030303030313033333033303832333d303030303f1c361e453032301e493438341e4831201e5630030000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
         copy_fields:
-          - name: msisdn
+          # See the APROBADA note above - this echoes Numero_SKU (F014.01),
+          # not the MSISDN, per the SPDH field mapping.
+          - name: msisdn # NOTE: actually echoes Numero_SKU
             request_offset: 54
             response_offset: 155
             length: 10
@@ -173,6 +205,8 @@ tcp_stubs:
             length: 9
           # 'e' sits before the 'g' text field, so its offset is unaffected
           # by DECLINADA's +1 byte shift - same wire offset as APROBADA above.
+          # Same caveat as approval_code above: this is inside the
+          # undocumented F017 blob, not the spec's F010 (already "02" above).
           # B24 decline codes (50-99) - see B24 reference table.
           - name: decline_code
             response_offset: 110
