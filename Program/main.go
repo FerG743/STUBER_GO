@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/hex"
 	"encoding/json"
 	"flag"
@@ -63,6 +64,30 @@ type TCPStub struct {
 	Fields             []TCPResponseField   `yaml:"fields,omitempty" json:"fields,omitempty"`               // Build the response from field specs instead of a captured template — see TCPResponseField
 	Length             int                  `yaml:"length,omitempty" json:"length,omitempty"`               // Total response byte length; required when Fields is set
 	Responses          []TCPResponseVariant `yaml:"responses,omitempty" json:"responses,omitempty"`         // Multiple possible outcomes (e.g. approved/declined), chosen at random per message
+	Match              *TCPMatch            `yaml:"match,omitempty" json:"match,omitempty"`                 // Selects this stub among others sharing the same Port — see TCPMatch
+	Label              string               `yaml:"label,omitempty" json:"label,omitempty"`                 // Human-readable message name for logs, e.g. "Plan 86 (Tiempo Aire)"; Name stays the stable key
+	Meta               *TCPMeta             `yaml:"meta,omitempty" json:"meta,omitempty"`                   // Portal-only display info; the server ignores it
+}
+
+// TCPMeta is display info for the portal's message list (served raw via the sim agent's
+// GET /stubs). The server never reads it; it lives here so the config schema stays in one place.
+type TCPMeta struct {
+	ID               string `yaml:"id" json:"id"`
+	Category         string `yaml:"category" json:"category"` // "spdh" or "iso8583"
+	DisplayName      string `yaml:"display_name" json:"display_name"`
+	Description      string `yaml:"description" json:"description"`
+	SampleRequestHex string `yaml:"sample_request_hex" json:"sample_request_hex"`
+}
+
+// TCPMatch lets several message definitions share one port, the way a real BASE24-style
+// switch multiplexes every transaction code over a single connection: each stub declares
+// the byte range that identifies its own message (e.g. SPDH's Codigo_Transaccion) and the
+// expected value there, and the first stub on that port whose Match is satisfied by the
+// incoming bytes handles it. A stub with no Match always matches — an unconditional
+// catch-all, and how a port with only one message type keeps working unchanged.
+type TCPMatch struct {
+	Offset int    `yaml:"offset" json:"offset"`
+	Value  string `yaml:"value" json:"value"` // hex-encoded expected byte(s) at Offset
 }
 
 // FieldCopy copies a fixed-length byte range from the raw request into the raw response,
@@ -120,7 +145,7 @@ type TCPResponseField struct {
 	// must encode to exactly Length bytes), or — if Values is empty — fills with fresh
 	// random ASCII digits, same as RandomField.
 	Source        string   `yaml:"source,omitempty" json:"source,omitempty"`
-	Encoding      string   `yaml:"encoding,omitempty" json:"encoding,omitempty"` // "ascii" (default) or "hex"; applies to Value/Values
+	Encoding      string   `yaml:"encoding,omitempty" json:"encoding,omitempty"` // "ascii" (default), "hex", "ebcdic", or "bcd"; applies to Value/Values
 	Value         string   `yaml:"value,omitempty" json:"value,omitempty"`
 	RequestOffset int      `yaml:"request_offset,omitempty" json:"request_offset,omitempty"`
 	Values        []string `yaml:"values,omitempty" json:"values,omitempty"`
@@ -242,47 +267,65 @@ func (s *HTTPStubServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(`{"error": "No stub matched"}`))
 }
 
-// TCPStubServer handles TCP connections
+// TCPStubServer handles TCP connections. Several stubs can share one port — see TCPMatch —
+// so each port maps to an ordered list, not a single stub.
 type TCPStubServer struct {
-	stubs map[int]*TCPStub
+	stubs map[int][]*TCPStub
 }
 
 // NewTCPStubServer creates a new TCP stub server
 func NewTCPStubServer() *TCPStubServer {
 	return &TCPStubServer{
-		stubs: make(map[int]*TCPStub),
+		stubs: make(map[int][]*TCPStub),
 	}
 }
 
-// AddStub adds a TCP stub
+// AddStub adds a TCP stub, appending to whatever's already registered on its port.
 func (s *TCPStubServer) AddStub(stub TCPStub) {
-	s.stubs[stub.Port] = &stub
+	s.stubs[stub.Port] = append(s.stubs[stub.Port], &stub)
 }
 
-// Start starts all TCP stub listeners
+// StubCount returns the total number of TCP stubs across every port, since s.stubs is now
+// keyed by port (which can hold several stubs) rather than one-stub-per-port.
+func (s *TCPStubServer) StubCount() int {
+	total := 0
+	for _, stubs := range s.stubs {
+		total += len(stubs)
+	}
+	return total
+}
+
+// Start starts all TCP stub listeners, one per distinct port.
 func (s *TCPStubServer) Start() error {
-	for port, stub := range s.stubs {
-		go func(p int, st *TCPStub) {
+	for port, stubs := range s.stubs {
+		go func(p int, st []*TCPStub) {
 			if err := s.listenTCP(p, st); err != nil {
-				log.Printf("[TCP] Stub %s error: %v", st.Name, err)
+				// One line per stub, in the "[TCP] Stub <name> error: ..." shape
+				// agent/sim_agent.py's _LISTEN_ERROR_RE parses to flag a failed bind.
+				for _, stub := range st {
+					log.Printf("[TCP] Stub %s error: %v", stub.Name, err)
+				}
 			}
-		}(port, stub)
+		}(port, stubs)
 	}
 	return nil
 }
 
-// listenTCP starts a TCP listener for a specific stub
-func (s *TCPStubServer) listenTCP(port int, stub *TCPStub) error {
+// listenTCP starts a TCP listener shared by every stub registered on this port; which one
+// handles a given connection (or message, for a persistent connection) is decided per
+// message by matchStub, not fixed at listen time.
+func (s *TCPStubServer) listenTCP(port int, stubs []*TCPStub) error {
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
 		return fmt.Errorf("failed to listen on port %d: %w", port, err)
 	}
 	defer listener.Close()
 
-	log.Printf("[TCP] Stub '%s' listening on port %d", stub.Name, port)
-	if stub.ValidateRequest {
-		log.Printf("[TCP] Stub '%s' has request validation enabled", stub.Name)
+	names := make([]string, len(stubs))
+	for i, st := range stubs {
+		names[i] = st.Name
 	}
+	log.Printf("[TCP] Listening on port %d with %d stub(s): %v", port, len(stubs), names)
 
 	for {
 		conn, err := listener.Accept()
@@ -291,8 +334,31 @@ func (s *TCPStubServer) listenTCP(port int, stub *TCPStub) error {
 			continue
 		}
 
-		go s.handleConnection(conn, stub)
+		go s.handleConnection(conn, port, stubs)
 	}
+}
+
+// matchStub picks the stub that should handle one received message: the first (in
+// declaration order) whose Match condition is satisfied by data, or that has no Match at
+// all (an unconditional catch-all). Returns nil if nothing on this port claims it.
+func matchStub(stubs []*TCPStub, data []byte) *TCPStub {
+	for _, stub := range stubs {
+		if stub.Match == nil {
+			return stub
+		}
+		want, err := hex.DecodeString(stub.Match.Value)
+		if err != nil {
+			log.Printf("[TCP:%s] Skipping match check: invalid match value %q: %v", stub.Name, stub.Match.Value, err)
+			continue
+		}
+		if stub.Match.Offset < 0 || stub.Match.Offset+len(want) > len(data) {
+			continue
+		}
+		if bytes.Equal(data[stub.Match.Offset:stub.Match.Offset+len(want)], want) {
+			return stub
+		}
+	}
+	return nil
 }
 
 // validateRequest validates the incoming TCP request (hex character length)
@@ -387,9 +453,23 @@ func applyRandomFields(stubName string, fields []RandomField, responseData []byt
 	}
 }
 
+// asciiToEBCDIC maps the ASCII characters SPDH-style fields actually use (space, digits,
+// uppercase letters) to their EBCDIC (cp500) code points. Anything else is an error rather
+// than a silent guess — see encodeFieldValue.
+var asciiToEBCDIC = map[byte]byte{
+	' ': 0x40,
+	'0': 0xF0, '1': 0xF1, '2': 0xF2, '3': 0xF3, '4': 0xF4,
+	'5': 0xF5, '6': 0xF6, '7': 0xF7, '8': 0xF8, '9': 0xF9,
+	'A': 0xC1, 'B': 0xC2, 'C': 0xC3, 'D': 0xC4, 'E': 0xC5, 'F': 0xC6, 'G': 0xC7, 'H': 0xC8, 'I': 0xC9,
+	'J': 0xD1, 'K': 0xD2, 'L': 0xD3, 'M': 0xD4, 'N': 0xD5, 'O': 0xD6, 'P': 0xD7, 'Q': 0xD8, 'R': 0xD9,
+	'S': 0xE2, 'T': 0xE3, 'U': 0xE4, 'V': 0xE5, 'W': 0xE6, 'X': 0xE7, 'Y': 0xE8, 'Z': 0xE9,
+}
+
 // encodeFieldValue turns a config-declared value into the exact bytes to write into the
-// response — "ascii" writes the string's own bytes, "hex" decodes a hex string — and
-// requires the result to be exactly length bytes, matching how RandomField already
+// response — "ascii" writes the string's own bytes, "hex" decodes a hex string, "ebcdic"
+// maps each character through asciiToEBCDIC, "bcd" packs a decimal-digit string 2
+// digits/byte (same bit layout as "hex", but rejects a-f since BCD digits are 0-9 only) —
+// and requires the result to be exactly length bytes, matching how RandomField already
 // requires a value's length to equal the declared field length rather than silently
 // padding or truncating.
 func encodeFieldValue(value, encoding string, length int) ([]byte, error) {
@@ -403,8 +483,29 @@ func encodeFieldValue(value, encoding string, length int) ([]byte, error) {
 			return nil, fmt.Errorf("invalid hex value %q: %w", value, err)
 		}
 		raw = decoded
+	case "ebcdic":
+		encoded := make([]byte, len(value))
+		for i := 0; i < len(value); i++ {
+			b, ok := asciiToEBCDIC[value[i]]
+			if !ok {
+				return nil, fmt.Errorf("invalid ebcdic value %q: unsupported character %q", value, value[i])
+			}
+			encoded[i] = b
+		}
+		raw = encoded
+	case "bcd":
+		for i := 0; i < len(value); i++ {
+			if value[i] < '0' || value[i] > '9' {
+				return nil, fmt.Errorf("invalid bcd value %q: must be decimal digits only", value)
+			}
+		}
+		decoded, err := hex.DecodeString(value)
+		if err != nil {
+			return nil, fmt.Errorf("invalid bcd value %q: %w", value, err)
+		}
+		raw = decoded
 	default:
-		return nil, fmt.Errorf("unsupported encoding %q (use \"ascii\" or \"hex\")", encoding)
+		return nil, fmt.Errorf("unsupported encoding %q (use \"ascii\", \"hex\", \"ebcdic\" or \"bcd\")", encoding)
 	}
 	if len(raw) != length {
 		return nil, fmt.Errorf("value %q (encoding %s) is %d byte(s), declared length is %d", value, orDefault(encoding, "ascii"), len(raw), length)
@@ -570,80 +671,115 @@ func buildResponse(stub *TCPStub, data []byte) ([]byte, string, error) {
 	return responseData, name, nil
 }
 
-// handleConnection handles a single TCP connection
-func (s *TCPStubServer) handleConnection(conn net.Conn, stub *TCPStub) {
+// handleConnection handles a single TCP connection. stubs is every message definition
+// registered on this port; which one applies is decided per message (not once for the
+// whole connection), since a real multiplexed connection can carry a different message
+// type on every exchange.
+func (s *TCPStubServer) handleConnection(conn net.Conn, port int, stubs []*TCPStub) {
 	defer conn.Close()
 
 	clientAddr := conn.RemoteAddr().String()
-	log.Printf("[TCP:%s %s] Connection from %s", stub.Name, time.Now().Format("15:04:05"), clientAddr)
+	log.Printf("[TCP:%d %s] Connection from %s", port, time.Now().Format("15:04:05"), clientAddr)
 
-	// Read incoming data
 	reader := bufio.NewReader(conn)
-
-	// For binary protocols, read all available data or up to a buffer size
 	buffer := make([]byte, 4096)
-	n, err := reader.Read(buffer)
-	if err != nil {
-		log.Printf("[TCP:%s] Error reading data: %v", stub.Name, err)
-		return
-	}
 
-	data := buffer[:n]
-	hexData := hex.EncodeToString(data)
-	log.Printf("[TCP:%s] Received %d bytes: %s", stub.Name, n, hexData)
-
-	// Validate request if enabled
-	if stub.ValidateRequest {
-		valid, reason := s.validateRequest(data, stub)
-		if !valid {
-			log.Printf("[TCP:%s] ❌ Validation failed: %s", stub.Name, reason)
-			log.Printf("[TCP:%s] Simulating timeout (no response sent)", stub.Name)
-			// Just close the connection without sending anything - simulates timeout
+	for {
+		n, err := reader.Read(buffer)
+		if err != nil {
 			return
 		}
-		log.Printf("[TCP:%s] ✅ Validation passed", stub.Name)
-	}
+		data := buffer[:n]
+		log.Printf("[TCP:%d] Received %d bytes: %s", port, n, hex.EncodeToString(data))
 
-	// Apply delay if specified
-	if stub.Delay > 0 {
-		time.Sleep(time.Duration(stub.Delay) * time.Millisecond)
-	}
+		stub := matchStub(stubs, data)
+		if stub == nil {
+			log.Printf("[TCP:%d] No stub's match condition fits this message - closing", port)
+			return
+		}
+		why := "catch-all, no match set"
+		if stub.Match != nil {
+			why = fmt.Sprintf("match: offset %d == %s", stub.Match.Offset, stub.Match.Value)
+		}
+		who := fmt.Sprintf("stub %q", stub.Name)
+		if stub.Label != "" {
+			who = fmt.Sprintf("%s — stub %q", stub.Label, stub.Name)
+		}
+		log.Printf("[TCP:%d] ▶ Matched %s, %s", port, who, why)
 
-	// Build and send the stub response
-	responseData, variantName, err := buildResponse(stub, data)
-	if err != nil {
-		log.Printf("[TCP:%s] Error building response: %v", stub.Name, err)
-		return
-	}
-
-	_, err = conn.Write(responseData)
-	if err != nil {
-		log.Printf("[TCP:%s] Error writing response: %v", stub.Name, err)
-		return
-	}
-
-	log.Printf("[TCP:%s] Sent %d bytes response (%s) to %s", stub.Name, len(responseData), variantName, clientAddr)
-
-	// Optionally keep connection open or close it
-	if !stub.CloseAfter {
-		// Keep connection open for more data
-		for {
-			n, err := reader.Read(buffer)
-			if err != nil {
-				break
+		if stub.ValidateRequest {
+			valid, reason := s.validateRequest(data, stub)
+			if !valid {
+				log.Printf("[TCP:%s] ❌ Validation failed: %s", stub.Name, reason)
+				log.Printf("[TCP:%s] Simulating timeout (no response sent)", stub.Name)
+				// Just close the connection without sending anything - simulates timeout
+				return
 			}
-			data := buffer[:n]
-			hexData := hex.EncodeToString(data)
-			log.Printf("[TCP:%s] Received: %s", stub.Name, hexData)
-			responseData, variantName, err := buildResponse(stub, data)
-			if err != nil {
-				log.Printf("[TCP:%s] Error building response: %v", stub.Name, err)
-				continue
-			}
-			log.Printf("[TCP:%s] Sending %d bytes response (%s)", stub.Name, len(responseData), variantName)
-			conn.Write(responseData)
+			log.Printf("[TCP:%s] ✅ Validation passed", stub.Name)
+		}
+
+		if stub.Delay > 0 {
+			time.Sleep(time.Duration(stub.Delay) * time.Millisecond)
+		}
+
+		responseData, variantName, err := buildResponse(stub, data)
+		if err != nil {
+			log.Printf("[TCP:%s] Error building response: %v", stub.Name, err)
+			return
+		}
+
+		if _, err := conn.Write(responseData); err != nil {
+			log.Printf("[TCP:%s] Error writing response: %v", stub.Name, err)
+			return
+		}
+		log.Printf("[TCP:%s] Sent %d bytes response (%s) to %s", stub.Name, len(responseData), variantName, clientAddr)
+
+		if stub.CloseAfter {
+			return
+		}
+		// Otherwise loop: keep the connection open and match the next message fresh,
+		// since it may belong to a different stub than this one did.
+	}
+}
+
+// applyOverrides applies the -port and -outcome flags to the loaded TCP stubs in place, so
+// a frontend can start the same static config on a chosen port with a chosen result
+// instead of generating a different YAML per run. port 0 / outcome "" leave things as is.
+// -port needs every stub to share one port (it would silently merge separate listeners
+// otherwise); -outcome (case-insensitive) keeps only the variant with that name in each
+// stub that has one, and errors if no stub does so a typo isn't silently ignored.
+func applyOverrides(stubs []TCPStub, port int, outcome string) error {
+	if port != 0 {
+		ports := map[int]bool{}
+		for _, st := range stubs {
+			ports[st.Port] = true
+		}
+		if len(ports) > 1 {
+			return fmt.Errorf("-port %d given but the config's TCP stubs use %d different ports", port, len(ports))
+		}
+		for i := range stubs {
+			stubs[i].Port = port
 		}
 	}
+	if outcome == "" {
+		return nil
+	}
+	pinned := false
+	var available []string
+	for i := range stubs {
+		for _, v := range stubs[i].Responses {
+			available = append(available, v.Name)
+			if strings.EqualFold(v.Name, outcome) {
+				stubs[i].Responses = []TCPResponseVariant{v}
+				pinned = true
+				break
+			}
+		}
+	}
+	if !pinned {
+		return fmt.Errorf("-outcome %q matches no response variant (available: %v)", outcome, available)
+	}
+	return nil
 }
 
 // LoadConfig loads stubs from a YAML or JSON file
@@ -677,7 +813,13 @@ func LoadConfig(filename string) (*StubConfig, error) {
 func main() {
 	configFile := flag.String("config", "", "Path to config file (YAML or JSON)")
 	httpPort := flag.Int("http-port", 8080, "HTTP port to listen on")
+	tcpPort := flag.Int("port", 0, "Override the listen port of the config's TCP stubs (requires all of them to share one port)")
+	outcome := flag.String("outcome", "", "Pin TCP stubs to the response variant with this name (e.g. APROBADA), instead of choosing at random")
 	flag.Parse()
+
+	if (*tcpPort != 0 || *outcome != "") && *configFile == "" {
+		log.Fatal("-port and -outcome only apply to a -config file's TCP stubs")
+	}
 
 	httpServer := NewHTTPStubServer()
 	tcpServer := NewTCPStubServer()
@@ -693,6 +835,9 @@ func main() {
 		}
 		log.Printf("Loaded %d HTTP stub(s) from %s", len(config.HTTPStubs), *configFile)
 
+		if err := applyOverrides(config.TCPStubs, *tcpPort, *outcome); err != nil {
+			log.Fatalf("Error applying -port/-outcome: %v", err)
+		}
 		for _, stub := range config.TCPStubs {
 			tcpServer.AddStub(stub)
 		}
@@ -726,7 +871,7 @@ func main() {
 	// Start HTTP server
 	httpAddr := fmt.Sprintf(":%d", *httpPort)
 	log.Printf("Starting HTTP stub server on %s", httpAddr)
-	log.Printf("Loaded %d HTTP stub(s) and %d TCP stub(s)", len(httpServer.stubs), len(tcpServer.stubs))
+	log.Printf("Loaded %d HTTP stub(s) and %d TCP stub(s)", len(httpServer.stubs), tcpServer.StubCount())
 	log.Println("Server ready to accept requests...")
 
 	if err := http.ListenAndServe(httpAddr, httpServer); err != nil {

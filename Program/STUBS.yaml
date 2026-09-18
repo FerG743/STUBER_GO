@@ -112,9 +112,30 @@ http_stubs:
       body: '{"status": "ok", "service": "4pl-api-stub"}'
 
 tcp_stubs:
-  # Recarga de tiempo aire (MTC1) - 396-character hex request, approved/declined response
+  # Plan 86 (Tiempo Aire) - 396-character hex request, approved/declined response.
+  # Built with `fields` (offset/length/source) instead of one hand-spliced response_hex
+  # blob - see TCPResponseField in main.go. Adding a new outcome or message means listing
+  # named fields, not counting bytes into a giant string by hand.
   - name: tcp-protocol
-    port: 8001
+    label: "Plan 86 (Tiempo Aire)"
+    port: 8101 # 8001 clashes with the local Big Ticket backend on dev machines
+    # Read by the portal (via agent GET /stubs) to list this message - STUBS.yaml is the
+    # single source of truth, the portal keeps no copy. Not used by the server itself.
+    meta:
+      id: recarga_tiempo_aire
+      category: spdh # spdh | iso8583 - which tab the portal shows it under
+      display_name: "Plan 86 (Tiempo Aire)"
+      description: "Switch Base24 de recarga prepago. Request de 396 caracteres hex; fuera de eso la conexión se cierra en silencio (timeout simulado)."
+      # Real capture, 26/01/28 16:07:59 - the portal's "Enviar al stub" sends this.
+      sample_request_hex: "00c4f0f8d3e5f0f0f0f2f100000002f00173960030860000010000000000000000001033030823f0f0f0f0f0f0f0f0f0f0f0f0f0f0f03130333330333038323330303030303535323130373134333430303030303030303030303030ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff000128"
+    # Real BASE24 traffic multiplexes every transaction code over one connection on this
+    # port, distinguished by Codigo_Transaccion (wire[21]) - declaring match here (rather
+    # than leaving it as the only/catch-all stub) is what lets a sibling message for another
+    # transaction code share port 8001 later: add a second tcp_stubs entry with the same
+    # port and its own match.value, and TCPStubServer picks between them per message.
+    match:
+      offset: 21
+      value: "86"
     validate_request: true
     min_length: 396
     max_length: 396
@@ -126,90 +147,173 @@ tcp_stubs:
     # Cross-checked against the SPDH Messages Dictionary for transaction code
     # "86" (Autorizacion Tiempo Aire). Confirmed field mapping (wire offset =
     # spec payload offset + 2 for the length prefix):
-    #   F009 Codigo_Transaccion  wire[21]     "86" (fixed, both variants)
-    #   F010 Codigo_Respuesta    wire[22]     "01" Aprobado / "02" Declinado / "04" Vale impreso
-    #   F015.04 Descripcion      wire[53:80]  free-text description - this is where
-    #                            (+1 shifted    "APROBADA"/"DECLINADA" actually lives (not a
-    #                            for DECLINADA) standalone tagged field as originally assumed)
-    # Everything from wire[82:] onward (F017 Info_Gral_Usuario) is a vendor/proprietary
-    # blob the SPDH dictionary itself marks "N/A (Cualquiera)" - the tagged sub-fields
-    # below ('e','g','h','i','q' in the original trace notes, incl. copy_fields/
-    # approval_code/decline_code) live in there and are NOT covered by that spec.
+    #   F009 Codigo_Transaccion  wire[21]     "86" (fixed, both variants - codigo_transaccion field)
+    #   F010 Codigo_Respuesta    wire[22]     "01" Aprobado / "02" Declinado / "04" Vale impreso (codigo_respuesta field)
+    #   F015 Info_Gral_Texto     wire[42:80]  compound field - see codigo_respuesta_2/separador/
+    #                                         codigo_autorizacion/descripcion_respuesta below
+    # Every field below down through descripcion_respuesta is F001-F015 from the dictionary.
+    # Everything from wire[80:] onward (F017 Info_Gral_Usuario) is a vendor/proprietary blob
+    # the SPDH dictionary itself marks "N/A (Cualquiera)" - the tagged sub-fields inside it
+    # ('e','g','h','i','q' in the original trace notes, i.e. approval/decline_code, the
+    # embedded text, auth_code, trace_number and msisdn below) are NOT covered by that spec.
     responses:
-      # Captured verbatim from the 26/01/28 16:08 trace. Field 'q' (response
-      # byte 145, inside the undocumented F017 blob) is a tagged field block;
-      # 'e'=00 (a proprietary status byte, unrelated to spec field F010 above -
-      # see the two code lists below), 'g'="APROBADA", 'h'=auth code,
-      # 'i'=trace number, 'q' embeds a value echoed from the request (see
-      # copy_fields note below - likely the SKU, not the MSISDN).
+      # Captured verbatim from the 26/01/28 16:08 trace.
       - name: APROBADA
         weight: 1
-        response_hex: "0104f0f8d3e5f0f0f0f2f120200002f00173960030860100000001303030303030303934353835f1f138f0f040f0f0f1f6f2f3f5f2c1d7d9d6c2c1c4c1404040404040404040404040404040404040400000f0f0f0f0f0f0f0f0f0f0999999999999000000000000000000001c6530301c674150524f424144411c68303031303234303734201c693030303030303033301c713b303030303030313033333033303832333d303030303f1c361e453032301e493438341e4831201e563003000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-        copy_fields:
-          # request_offset 54 (wire) = payload offset 52, which per the SPDH
-          # dictionary is exactly F014.01 Numero_SKU (10 bytes, ASCII) - not a
-          # phone number. Kept the field name for backward compat with
-          # whatever consumed it before; the real MSISDN in the request lives
-          # in F012 Referencia_ACC (wire[27:39]) or F014.02 Numero_Telefono
-          # (wire[64:79]) if a future stub needs to echo the actual phone.
+        length: 262
+        fields:
+          # wire[0:1]: 2-byte frame/sequence prefix - not part of the SPDH payload, no
+          # spec field covers it, kept as a raw hex literal from the captured trace.
+          - name: frame_prefix
+            offset: 0
+            length: 2
+            encoding: hex
+            value: "0104"
+          # wire[2:22]: F001-F009, the envelope shared byte-for-byte (same offset, same
+          # type) between the SPDH request and response tables. F007.02 Id_Boleta and F008
+          # Consecutivo_Mensaje are explicitly marked "BASE24 hace ECHO a este valor" in the
+          # dictionary - the rest of the envelope (store/terminal/message-type/txn-code)
+          # follows the same logic: a real switch reflects what the terminal sent rather
+          # than inventing its own, so all of these are source:request, not canned values.
+          - {name: version_vtol, source: request, request_offset: 2, offset: 2, length: 2}
+          - {name: formato_negocio, source: request, request_offset: 4, offset: 4, length: 2}
+          - {name: numero_tienda, source: request, request_offset: 6, offset: 6, length: 4}
+          - {name: reservado_tienda, source: request, request_offset: 10, offset: 10, length: 1} # F003.02 - "Campo sin uso"
+          - {name: filler_1, source: request, request_offset: 11, offset: 11, length: 2}
+          - {name: id_terminal, source: request, request_offset: 13, offset: 13, length: 2}
+          - {name: tipo_mensaje, source: request, request_offset: 15, offset: 15, length: 1}
+          - {name: reservado_boleta, source: request, request_offset: 16, offset: 16, length: 1} # F007.01 - "Campo sin uso"
+          - {name: id_boleta, source: request, request_offset: 17, offset: 17, length: 2} # F007.02 - spec: BASE24 echoes this
+          - {name: consecutivo_mensaje, source: request, request_offset: 19, offset: 19, length: 2} # F008 - spec: BASE24 echoes this
+          - {name: codigo_transaccion, source: request, request_offset: 21, offset: 21, length: 1} # F009
+          # F010 is genuinely different between the two tables (request: fixed Indicador_Estatus
+          # "00"; response: Codigo_Respuesta, the stub-controlled result) - not an echo.
+          - {name: codigo_respuesta, offset: 22, length: 1, encoding: bcd, value: "01"} # F010 - "01" Aprobado
+          # F011 Monto: the dictionary lists the response's own value as fixed "Ceros", but
+          # reflecting the request's actual amount is more useful for testing than a canned
+          # constant - echo it instead.
+          - {name: monto, source: request, request_offset: 23, offset: 23, length: 4}
+          # F012 Referencia_ACC: same offset as the request's, but a DIFFERENT field by
+          # meaning and physical type - request's is the phone number (BCD), response's is
+          # "Número de orden dada de alta" (ASCII), a value the response system itself
+          # generates. Not an echo target - stays canned.
+          - {name: referencia_acc, offset: 27, length: 12, encoding: ascii, value: "000000094585"}
+          - {name: indicadores_2, offset: 39, length: 2, encoding: ebcdic, value: "11"} # F013 - fixed value
+          - {name: longitud_info_gral_texto, offset: 41, length: 1, encoding: bcd, value: "38"} # F014 - fixed value
+          - {name: codigo_respuesta_2, offset: 42, length: 2, encoding: ebcdic, value: "00"} # F015.01
+          - {name: separador, offset: 44, length: 1, encoding: ebcdic, value: " "} # F015.02 - " " or "@"
+          - {name: codigo_autorizacion, offset: 45, length: 8, encoding: ebcdic, value: "00162352"} # F015.03
+          - name: descripcion_respuesta # F015.04 - last sub-field of Info_Gral_Texto above
+            offset: 53
+            length: 27
+            encoding: ebcdic
+            value: "APROBADA                   " # "APROBADA" + 19 spaces = 27 chars
+          # F016+F017 (spec) - vendor/proprietary blob, undocumented internal tag structure
+          # (tags 1c65/1c67/1c68/1c69/1c71/1c36...). No request fields are known to map into
+          # it besides msisdn below. Laid down first so the request/random fields below can
+          # overlay just the windows inside it that vary per message.
+          - name: info_gral_usuario
+            offset: 80
+            length: 182
+            encoding: hex
+            value: "0000f0f0f0f0f0f0f0f0f0f0999999999999000000000000000000001c6530301c674150524f424144411c68303031303234303734201c693030303030303033301c713b303030303030313033333033303832333d303030303f1c361e453032301e493438341e4831201e563003000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+          # request_offset 54 (wire) = payload offset 52, which per the SPDH dictionary is
+          # exactly F014.01 Numero_SKU (10 bytes, ASCII) - not a phone number. Kept the
+          # field name for backward compat with whatever consumed it before; the real
+          # MSISDN in the request lives in F012 Referencia_ACC (wire[27:39]) or F014.02
+          # Numero_Telefono (wire[64:79]) if a future variant needs to echo the actual phone.
           - name: msisdn # NOTE: actually echoes Numero_SKU, see comment above
+            source: request
             request_offset: 54
-            response_offset: 154
+            offset: 154
             length: 10
-        random_fields:
           - name: auth_code
-            response_offset: 124
+            source: random
+            offset: 124
             length: 9
           - name: trace_number
-            response_offset: 136
+            source: random
+            offset: 136
             length: 9
-          # Proprietary status byte inside the undocumented F017 blob - NOT
-          # the spec's F010 Codigo_Respuesta (that's fixed at wire[22]="01").
-          # Value list below is an unverified guess (Base24-style codes),
-          # since SPDH doesn't document this blob's internal layout.
+          # Proprietary status byte inside the undocumented F017 blob - NOT the spec's
+          # F010 Codigo_Respuesta (that's fixed at wire[22]="01" in codigo_respuesta above).
+          # Value list below is an unverified guess (Base24-style codes), since SPDH
+          # doesn't document this blob's internal layout.
           - name: approval_code
-            response_offset: 110
+            source: random
+            offset: 110
             length: 2
             values: ["00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10"]
 
-      # NOT a captured trace - we don't have a real decline sample yet. Built
-      # by editing the APROBADA bytes above: 'g' "APROBADA"->"DECLINADA" (+1
-      # byte, which shifts every offset after it by 1 vs. the approved
-      # variant - already accounted for below). 'e' is left at a plausible
-      # default ("50" = generic Declined) but is always overwritten by
-      # random_fields below anyway. Swap in the real captured bytes here as
-      # soon as you have one.
-      #
-      # Verified against SPDH: total length trimmed back to 262 bytes (the
-      # +1 byte from the text swap must not change the fixed frame size), and
-      # spec field F010 Codigo_Respuesta (wire[22]) corrected to "02"
-      # (Declinado) - it had been left at "01" (Aprobado), copied verbatim
-      # from APROBADA, which the SPDH dictionary now shows is wrong for a
-      # decline response.
+      # NOT a captured trace - we don't have a real decline sample yet. Built from the
+      # APROBADA fields above with three changes: codigo_respuesta is "02" (Declinado),
+      # descripcion_respuesta says "DECLINADA", and info_gral_usuario is the hand-edited
+      # blob with its internal tag text swapped (which shifts everything after that tag by
+      # +1 byte inside the blob - see the msisdn/auth_code/trace_number offsets below vs.
+      # APROBADA's). Swap in a real declined capture when one shows up.
       - name: DECLINADA
         weight: 1
-        response_hex: "0105f0f8d3e5f0f0f0f2f120200002f00173960030860200000001303030303030303934353835f1f138f0f040f0f0f1f6f2f3f5f2c1d7d9d6c2c1c4c1404040404040404040404040404040404040400000f0f0f0f0f0f0f0f0f0f0999999999999000000000000000000001c6535301c674445434c494e4144411c68303031303234303734201c693030303030303033301c713b303030303030313033333033303832333d303030303f1c361e453032301e493438341e4831201e5630030000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-        copy_fields:
-          # See the APROBADA note above - this echoes Numero_SKU (F014.01),
-          # not the MSISDN, per the SPDH field mapping.
+        length: 262
+        fields:
+          # Same envelope-echo pattern as APROBADA above; only codigo_respuesta differs (see
+          # F010 comment there). frame_prefix's own byte also happens to differ in the
+          # captured trace (0105 vs 0104) - unrelated to F010, just what was recorded.
+          - name: frame_prefix
+            offset: 0
+            length: 2
+            encoding: hex
+            value: "0105"
+          - {name: version_vtol, source: request, request_offset: 2, offset: 2, length: 2}
+          - {name: formato_negocio, source: request, request_offset: 4, offset: 4, length: 2}
+          - {name: numero_tienda, source: request, request_offset: 6, offset: 6, length: 4}
+          - {name: reservado_tienda, source: request, request_offset: 10, offset: 10, length: 1}
+          - {name: filler_1, source: request, request_offset: 11, offset: 11, length: 2}
+          - {name: id_terminal, source: request, request_offset: 13, offset: 13, length: 2}
+          - {name: tipo_mensaje, source: request, request_offset: 15, offset: 15, length: 1}
+          - {name: reservado_boleta, source: request, request_offset: 16, offset: 16, length: 1}
+          - {name: id_boleta, source: request, request_offset: 17, offset: 17, length: 2}
+          - {name: consecutivo_mensaje, source: request, request_offset: 19, offset: 19, length: 2}
+          - {name: codigo_transaccion, source: request, request_offset: 21, offset: 21, length: 1}
+          - {name: codigo_respuesta, offset: 22, length: 1, encoding: bcd, value: "02"} # F010 - "02" Declinado, not an echo
+          - {name: monto, source: request, request_offset: 23, offset: 23, length: 4}
+          - {name: referencia_acc, offset: 27, length: 12, encoding: ascii, value: "000000094585"}
+          - {name: indicadores_2, offset: 39, length: 2, encoding: ebcdic, value: "11"}
+          - {name: longitud_info_gral_texto, offset: 41, length: 1, encoding: bcd, value: "38"}
+          - {name: codigo_respuesta_2, offset: 42, length: 2, encoding: ebcdic, value: "00"}
+          - {name: separador, offset: 44, length: 1, encoding: ebcdic, value: " "}
+          - {name: codigo_autorizacion, offset: 45, length: 8, encoding: ebcdic, value: "00162352"}
+          - name: descripcion_respuesta
+            offset: 53
+            length: 27
+            encoding: ebcdic
+            value: "DECLINADA                  " # "DECLINADA" + 18 spaces = 27 chars
+          - name: info_gral_usuario
+            offset: 80
+            length: 182
+            encoding: hex
+            value: "0000f0f0f0f0f0f0f0f0f0f0999999999999000000000000000000001c6535301c674445434c494e4144411c68303031303234303734201c693030303030303033301c713b303030303030313033333033303832333d303030303f1c361e453032301e493438341e4831201e5630030000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+          # See the APROBADA note above - this echoes Numero_SKU (F014.01), not the
+          # MSISDN, per the SPDH field mapping. Offset is +1 vs. APROBADA (154->155)
+          # because of the blob-internal tag shift described above.
           - name: msisdn # NOTE: actually echoes Numero_SKU
+            source: request
             request_offset: 54
-            response_offset: 155
+            offset: 155
             length: 10
-        random_fields:
           - name: auth_code
-            response_offset: 125
+            source: random
+            offset: 125
             length: 9
           - name: trace_number
-            response_offset: 137
+            source: random
+            offset: 137
             length: 9
-          # 'e' sits before the 'g' text field, so its offset is unaffected
-          # by DECLINADA's +1 byte shift - same wire offset as APROBADA above.
-          # Same caveat as approval_code above: this is inside the
-          # undocumented F017 blob, not the spec's F010 (already "02" above).
-          # B24 decline codes (50-99) - see B24 reference table.
+          # Offset 110 sits before the blob-internal text tag, so it's unaffected by the
+          # +1 shift - same wire offset as APROBADA's approval_code above. Same caveat:
+          # this is inside the undocumented F017 blob, not spec's F010 (already "02" above).
           - name: decline_code
-            response_offset: 110
+            source: random
+            offset: 110
             length: 2
             values: ["50", "51", "52", "53", "54", "55", "56", "57", "58", "59",
                      "60", "61", "62", "63", "64", "65", "66", "67", "68", "69",
@@ -217,54 +321,86 @@ tcp_stubs:
                      "80", "81", "82", "83", "84", "85", "86", "87", "88", "89",
                      "90", "91", "92", "93", "94", "95", "96", "97", "98", "99"]
 
-  # Recarga de tiempo aire - Suburbia (86-SOLICITUD/RESPUESTA). Different wire
-  # format from the Liverpool stub above: fixed-width EBCDIC/BCD fields
-  # instead of tagged fields, so it needs its own port (can't share 8001 -
-  # TCPStubServer keys one stub per port). Captured verbatim from the
-  # 26/08/03 13:46 trace (record 7172 request / 7190 response); every field
-  # below was cross-checked byte-for-byte against that trace's own parsed
-  # field dump. Only an approved (code 01) sample exists - no declined
-  # Suburbia trace yet, so unlike the Liverpool stub there's no decline
-  # variant here. Swap in a real declined capture when one shows up.
-  - name: tiempo-aire-suburbia
-    port: 8002
-    validate_request: true
-    min_length: 396
-    max_length: 396
-    close_after: true
-    responses:
-      - name: APROBADA
+      # DRAFT / UNVERIFIED - not a captured trace. F010 Codigo_Respuesta "04" = "Emision Vale
+      # Impreso" is in the SPDH dictionary (response table), but we have no real 04 sample. Built
+      # as a copy of APROBADA with only these changes: codigo_respuesta "04" and the F015.04
+      # description. Everything inside the F017 blob (info_gral_usuario) is APROBADA's, including
+      # its embedded "APROBADA" text; the guessed approval_code byte is left out (stays "00").
+      # What "04" carries can differ per message - swap in a real capture when one shows up.
+      - name: VALE IMPRESO
         weight: 1
-        response_hex: "0104f0f8e2c2f0f5f5f8f120200005f00019030032860100005000000000000000000000000000f1f138f0f040f3f9f0f6f1f1f8f0e3d9c1d5e2c1c3c3c9d6d540c1d7d9d6c2c1c4c1404040404040400000f0f0f0f0f0f0f0f0f0f09999999999990000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002020202020202020202020202020202020202020"
-        # Offsets include the 2-byte length prefix on both request and
-        # response wire bytes (same convention as the Liverpool stub above).
-        # Everything through Monto Regular sits at the same offset in both
-        # request and response, so each field just echoes straight across;
-        # Referencia ACC does NOT echo (the real switch zeroes it in the
-        # response) and Codigo Respuesta (offset 22) isn't copied - it's the
-        # approval code, baked fixed into response_hex above.
-        copy_fields:
-          - name: numero_tienda
-            request_offset: 6
-            response_offset: 6
-            length: 5
-          - name: id_terminal
-            request_offset: 13
-            response_offset: 13
+        length: 262
+        fields:
+          # wire[0:1]: 2-byte frame/sequence prefix - not part of the SPDH payload, no
+          # spec field covers it, kept as a raw hex literal from the captured trace.
+          - name: frame_prefix
+            offset: 0
             length: 2
-          - name: indicadores
-            request_offset: 16
-            response_offset: 16
-            length: 3
-          - name: consecutivo_mensaje
-            request_offset: 19
-            response_offset: 19
-            length: 2
-          - name: codigo_transaccion
-            request_offset: 21
-            response_offset: 21
-            length: 1
-          - name: monto_regular
-            request_offset: 23
-            response_offset: 23
-            length: 4
+            encoding: hex
+            value: "0104"
+          # wire[2:22]: F001-F009, the envelope shared byte-for-byte (same offset, same
+          # type) between the SPDH request and response tables. F007.02 Id_Boleta and F008
+          # Consecutivo_Mensaje are explicitly marked "BASE24 hace ECHO a este valor" in the
+          # dictionary - the rest of the envelope (store/terminal/message-type/txn-code)
+          # follows the same logic: a real switch reflects what the terminal sent rather
+          # than inventing its own, so all of these are source:request, not canned values.
+          - {name: version_vtol, source: request, request_offset: 2, offset: 2, length: 2}
+          - {name: formato_negocio, source: request, request_offset: 4, offset: 4, length: 2}
+          - {name: numero_tienda, source: request, request_offset: 6, offset: 6, length: 4}
+          - {name: reservado_tienda, source: request, request_offset: 10, offset: 10, length: 1} # F003.02 - "Campo sin uso"
+          - {name: filler_1, source: request, request_offset: 11, offset: 11, length: 2}
+          - {name: id_terminal, source: request, request_offset: 13, offset: 13, length: 2}
+          - {name: tipo_mensaje, source: request, request_offset: 15, offset: 15, length: 1}
+          - {name: reservado_boleta, source: request, request_offset: 16, offset: 16, length: 1} # F007.01 - "Campo sin uso"
+          - {name: id_boleta, source: request, request_offset: 17, offset: 17, length: 2} # F007.02 - spec: BASE24 echoes this
+          - {name: consecutivo_mensaje, source: request, request_offset: 19, offset: 19, length: 2} # F008 - spec: BASE24 echoes this
+          - {name: codigo_transaccion, source: request, request_offset: 21, offset: 21, length: 1} # F009
+          # F010 is genuinely different between the two tables (request: fixed Indicador_Estatus
+          # "00"; response: Codigo_Respuesta, the stub-controlled result) - not an echo.
+          - {name: codigo_respuesta, offset: 22, length: 1, encoding: bcd, value: "04"} # F010 - "04" Emision Vale Impreso
+          # F011 Monto: the dictionary lists the response's own value as fixed "Ceros", but
+          # reflecting the request's actual amount is more useful for testing than a canned
+          # constant - echo it instead.
+          - {name: monto, source: request, request_offset: 23, offset: 23, length: 4}
+          # F012 Referencia_ACC: same offset as the request's, but a DIFFERENT field by
+          # meaning and physical type - request's is the phone number (BCD), response's is
+          # "Número de orden dada de alta" (ASCII), a value the response system itself
+          # generates. Not an echo target - stays canned.
+          - {name: referencia_acc, offset: 27, length: 12, encoding: ascii, value: "000000094585"}
+          - {name: indicadores_2, offset: 39, length: 2, encoding: ebcdic, value: "11"} # F013 - fixed value
+          - {name: longitud_info_gral_texto, offset: 41, length: 1, encoding: bcd, value: "38"} # F014 - fixed value
+          - {name: codigo_respuesta_2, offset: 42, length: 2, encoding: ebcdic, value: "00"} # F015.01
+          - {name: separador, offset: 44, length: 1, encoding: ebcdic, value: " "} # F015.02 - " " or "@"
+          - {name: codigo_autorizacion, offset: 45, length: 8, encoding: ebcdic, value: "00162352"} # F015.03
+          - name: descripcion_respuesta # F015.04 - last sub-field of Info_Gral_Texto above
+            offset: 53
+            length: 27
+            encoding: ebcdic
+            value: "EMISION VALE IMPRESO       " # "EMISION VALE IMPRESO" + 7 spaces = 27 chars
+          # F016+F017 (spec) - vendor/proprietary blob, undocumented internal tag structure
+          # (tags 1c65/1c67/1c68/1c69/1c71/1c36...). No request fields are known to map into
+          # it besides msisdn below. Laid down first so the request/random fields below can
+          # overlay just the windows inside it that vary per message.
+          - name: info_gral_usuario
+            offset: 80
+            length: 182
+            encoding: hex
+            value: "0000f0f0f0f0f0f0f0f0f0f0999999999999000000000000000000001c6530301c674150524f424144411c68303031303234303734201c693030303030303033301c713b303030303030313033333033303832333d303030303f1c361e453032301e493438341e4831201e563003000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+          # request_offset 54 (wire) = payload offset 52, which per the SPDH dictionary is
+          # exactly F014.01 Numero_SKU (10 bytes, ASCII) - not a phone number. Kept the
+          # field name for backward compat with whatever consumed it before; the real
+          # MSISDN in the request lives in F012 Referencia_ACC (wire[27:39]) or F014.02
+          # Numero_Telefono (wire[64:79]) if a future variant needs to echo the actual phone.
+          - name: msisdn # NOTE: actually echoes Numero_SKU, see comment above
+            source: request
+            request_offset: 54
+            offset: 154
+            length: 10
+          - name: auth_code
+            source: random
+            offset: 124
+            length: 9
+          - name: trace_number
+            source: random
+            offset: 136
+            length: 9

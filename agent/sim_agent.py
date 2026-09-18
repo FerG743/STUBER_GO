@@ -41,6 +41,9 @@ from urllib.parse import urlparse, parse_qs
 _HERE = os.path.dirname(os.path.abspath(__file__))
 PROGRAM_DIR = os.path.normpath(os.path.join(_HERE, "..", "Program"))
 DATA_DIR = os.path.join(_HERE, "data")
+# Config a run uses when the caller sends no YAML: the repo's own stub definitions.
+# The binary's -port/-outcome flags then cover the two things that vary per run.
+STATIC_CONFIG = os.path.join(PROGRAM_DIR, "STUBS.yaml")
 # The stub's own HTTP server (for http_stubs) needs a port too, even though
 # our generated configs are TCP-only. "0" asks the OS for a free ephemeral
 # port — required once more than one stub can run at a time: a fixed port
@@ -130,8 +133,11 @@ def _append_log(stub_name, line):
             if addr not in clients:
                 clients.append(addr)
 
+        # Every line here came from this run's own process, so a bind failure in it is
+        # this run's failure - no need for the YAML's stub name to equal the caller's
+        # stubName (they legitimately differ when running the static STUBS.yaml).
         listen_error = _LISTEN_ERROR_RE.search(line)
-        if listen_error and listen_error.group(1) == stub_name and stub_name in _RUNS:
+        if listen_error and stub_name in _RUNS:
             run = _RUNS[stub_name]
             if run["status"] == "running":
                 run["status"] = "error"
@@ -196,6 +202,16 @@ def start(stub_name, yaml_text, ports, outcome_name, pinned_code, ttl_minutes, o
         ttl_minutes = MIN_TTL_MINUTES
     ttl_minutes = max(MIN_TTL_MINUTES, min(ttl_minutes, MAX_TTL_MINUTES))
 
+    # With yaml_text: legacy path, the caller's YAML is the whole config. Without it: run
+    # the static STUBS.yaml and pass what varies as flags - one port (-port only takes
+    # one) and an optional variant name to pin (-outcome). pinned_code has no flag, so
+    # asking for it without a YAML is rejected rather than silently ignored.
+    if not yaml_text:
+        if len(ports) != 1:
+            raise ValueError("Sin YAML solo se admite un puerto (ports debe tener 1 elemento)")
+        if pinned_code:
+            raise ValueError("pinnedCode requiere enviar el YAML; sin YAML solo se puede fijar outcomeName")
+
     if not os.path.exists(os.path.join(PROGRAM_DIR, "main.go")):
         raise RuntimeError(f"No se encontró main.go en {PROGRAM_DIR}")
 
@@ -225,8 +241,14 @@ def start(stub_name, yaml_text, ports, outcome_name, pinned_code, ttl_minutes, o
     os.makedirs(stub_dir, exist_ok=True)
     config_path = os.path.join(stub_dir, "current.yaml")
     bin_path = os.path.join(stub_dir, "stuber_bin")
-    with open(config_path, "w", encoding="utf-8") as f:
-        f.write(yaml_text)
+    if yaml_text:
+        with open(config_path, "w", encoding="utf-8") as f:
+            f.write(yaml_text)
+        run_args = ["-config", config_path]
+    else:
+        run_args = ["-config", STATIC_CONFIG, "-port", str(ports[0])]
+        if outcome_name:
+            run_args += ["-outcome", outcome_name]
 
     build = subprocess.run(
         ["go", "build", "-o", bin_path, "."], cwd=PROGRAM_DIR, capture_output=True, text=True
@@ -235,7 +257,7 @@ def start(stub_name, yaml_text, ports, outcome_name, pinned_code, ttl_minutes, o
         raise RuntimeError(f"go build falló: {build.stderr}")
 
     proc = subprocess.Popen(
-        [bin_path, "-config", config_path, "-http-port", UNUSED_HTTP_PORT],
+        [bin_path, *run_args, "-http-port", UNUSED_HTTP_PORT],
         cwd=PROGRAM_DIR,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -364,8 +386,8 @@ class Handler(BaseHTTPRequestHandler):
             if path == "/start":
                 body = self._read_json()
                 stub_name = body.get("stubName")
-                if not stub_name or not body.get("yaml"):
-                    return self._send_json(400, {"error": "Falta stubName o el YAML de configuración"})
+                if not stub_name:
+                    return self._send_json(400, {"error": "Falta stubName"})
                 # Accept either "ports" (a run can bundle several tcp_stubs
                 # entries - e.g. Liverpool + Suburbia in one process/port
                 # pair) or the older singular "port", for callers still on
@@ -377,7 +399,7 @@ class Handler(BaseHTTPRequestHandler):
                     return self._send_json(400, {"error": "Falta ports (o port)"})
                 result = start(
                     stub_name,
-                    body["yaml"],
+                    body.get("yaml"),
                     ports,
                     body.get("outcomeName", ""),
                     body.get("pinnedCode"),
@@ -399,6 +421,8 @@ class Handler(BaseHTTPRequestHandler):
                 response_hex = send_test_request(stub_name, body["hex"], port=body.get("port"))
                 return self._send_json(200, {"responseHex": response_hex})
             return self._send_json(404, {"error": "not found"})
+        except ValueError as e:
+            return self._send_json(400, {"error": str(e)})
         except PermissionError as e:
             return self._send_json(403, {"error": str(e)})
         except RuntimeError as e:
@@ -413,6 +437,11 @@ class Handler(BaseHTTPRequestHandler):
 
         if path == "/status":
             return self._send_json(200, status())
+
+        if path == "/stubs":
+            # Raw text, unparsed - this agent is stdlib-only (no YAML parser); the caller parses.
+            with open(os.path.join(PROGRAM_DIR, "STUBS.yaml"), encoding="utf-8") as f:
+                return self._send_json(200, {"yaml": f.read()})
 
         if path == "/logs-stream":
             stub_name = (qs.get("stubName") or [None])[0]
