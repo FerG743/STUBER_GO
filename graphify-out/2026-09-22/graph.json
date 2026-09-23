@@ -14,7 +14,7 @@
       "file_type": "code",
       "norm_label": "handler",
       "source_file": "agent/sim_agent.py",
-      "source_location": "L351"
+      "source_location": "L321"
     },
     {
       "id": "agent_sim_agent_append_log",
@@ -26,7 +26,7 @@
       "file_type": "code",
       "norm_label": "_append_log()",
       "source_file": "agent/sim_agent.py",
-      "source_location": "L120"
+      "source_location": "L115"
     },
     {
       "id": "agent_sim_agent_detect_local_ip",
@@ -38,7 +38,7 @@
       "file_type": "code",
       "norm_label": "_detect_local_ip()",
       "source_file": "agent/sim_agent.py",
-      "source_location": "L64"
+      "source_location": "L61"
     },
     {
       "id": "agent_sim_agent_expire",
@@ -50,7 +50,7 @@
       "file_type": "code",
       "norm_label": "_expire()",
       "source_file": "agent/sim_agent.py",
-      "source_location": "L187"
+      "source_location": "L179"
     },
     {
       "id": "agent_sim_agent_main",
@@ -62,7 +62,7 @@
       "file_type": "code",
       "norm_label": "main()",
       "source_file": "agent/sim_agent.py",
-      "source_location": "L470"
+      "source_location": "L424"
     },
     {
       "id": "agent_sim_agent_reader_thread",
@@ -74,7 +74,7 @@
       "file_type": "code",
       "norm_label": "_reader_thread()",
       "source_file": "agent/sim_agent.py",
-      "source_location": "L147"
+      "source_location": "L139"
     },
     {
       "id": "agent_sim_agent_run_slot",
@@ -86,7 +86,7 @@
       "file_type": "code",
       "norm_label": "_run_slot()",
       "source_file": "agent/sim_agent.py",
-      "source_location": "L114"
+      "source_location": "L109"
     },
     {
       "id": "agent_sim_agent_start",
@@ -98,7 +98,43 @@
       "file_type": "code",
       "norm_label": "start()",
       "source_file": "agent/sim_agent.py",
-      "source_location": "L198"
+      "source_location": "L190"
+    },
+    {
+      "id": "agent_sim_agent_status",
+      "label": "status()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "sim_agent.py",
+      "file_type": "code",
+      "norm_label": "status()",
+      "source_file": "agent/sim_agent.py",
+      "source_location": "L286"
+    },
+    {
+      "id": "agent_sim_agent_stop",
+      "label": "stop()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "sim_agent.py",
+      "file_type": "code",
+      "norm_label": "stop()",
+      "source_file": "agent/sim_agent.py",
+      "source_location": "L275"
+    },
+    {
+      "id": "agent_sim_agent_stop_locked",
+      "label": "_stop_locked()",
+      "_callable": true,
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "sim_agent.py",
+      "file_type": "code",
+      "norm_label": "_stop_locked()",
+      "source_file": "agent/sim_agent.py",
+      "source_location": "L157"
     },
     {
       "id": "agent_sim_agent_handler_do_get",
@@ -110,7 +146,7 @@
       "file_type": "code",
       "norm_label": ".do_get()",
       "source_file": "agent/sim_agent.py",
-      "source_location": "L433"
+      "source_location": "L392"
     },
     {
       "id": "agent_sim_agent_handler_do_post",
@@ -122,7 +158,7 @@
       "file_type": "code",
       "norm_label": ".do_post()",
       "source_file": "agent/sim_agent.py",
-      "source_location": "L383"
+      "source_location": "L353"
     },
     {
       "id": "agent_sim_agent_handler_log_message",
@@ -134,7 +170,7 @@
       "file_type": "code",
       "norm_label": ".log_message()",
       "source_file": "agent/sim_agent.py",
-      "source_location": "L368"
+      "source_location": "L338"
     },
     {
       "id": "agent_sim_agent_handler_read_json",
@@ -146,7 +182,7 @@
       "file_type": "code",
       "norm_label": "._read_json()",
       "source_file": "agent/sim_agent.py",
-      "source_location": "L360"
+      "source_location": "L330"
     },
     {
       "id": "agent_sim_agent_handler_send_json",
@@ -158,7 +194,7 @@
       "file_type": "code",
       "norm_label": "._send_json()",
       "source_file": "agent/sim_agent.py",
-      "source_location": "L352"
+      "source_location": "L322"
     },
     {
       "id": "agent_sim_agent_handler_write_chunk",
@@ -170,7 +206,7 @@
       "file_type": "code",
       "norm_label": "._write_chunk()",
       "source_file": "agent/sim_agent.py",
-      "source_location": "L371"
+      "source_location": "L341"
     },
     {
       "id": "agent_sim_agent_logs_since",
@@ -182,7 +218,7 @@
       "file_type": "code",
       "norm_label": "logs_since()",
       "source_file": "agent/sim_agent.py",
-      "source_location": "L327"
+      "source_location": "L301"
     },
     {
       "id": "agent_sim_agent_send_test_request",
@@ -194,43 +230,7 @@
       "file_type": "code",
       "norm_label": "send_test_request()",
       "source_file": "agent/sim_agent.py",
-      "source_location": "L332"
-    },
-    {
-      "id": "agent_sim_agent_status",
-      "label": "status()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 7,
-      "community_name": "_stop_locked",
-      "file_type": "code",
-      "norm_label": "status()",
-      "source_file": "agent/sim_agent.py",
-      "source_location": "L312"
-    },
-    {
-      "id": "agent_sim_agent_stop",
-      "label": "stop()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 7,
-      "community_name": "_stop_locked",
-      "file_type": "code",
-      "norm_label": "stop()",
-      "source_file": "agent/sim_agent.py",
-      "source_location": "L301"
-    },
-    {
-      "id": "agent_sim_agent_stop_locked",
-      "label": "_stop_locked()",
-      "_callable": true,
-      "_origin": "ast",
-      "community": 7,
-      "community_name": "_stop_locked",
-      "file_type": "code",
-      "norm_label": "_stop_locked()",
-      "source_file": "agent/sim_agent.py",
-      "source_location": "L165"
+      "source_location": "L306"
     },
     {
       "id": "agent_sim_agent",
@@ -242,6 +242,17 @@
       "norm_label": "sim_agent.py",
       "source_file": "agent/sim_agent.py",
       "source_location": "L1"
+    },
+    {
+      "id": "agent_sim_agent_rationale_158",
+      "label": "Caller must hold _LOCK for the whole call. Blocks other requests for up to ~5s\u2026",
+      "_origin": "ast",
+      "community": 0,
+      "community_name": "sim_agent.py",
+      "file_type": "rationale",
+      "norm_label": "caller must hold _lock for the whole call. blocks other requests for up to ~5s...",
+      "source_file": "agent/sim_agent.py",
+      "source_location": "L158"
     },
     {
       "id": "agent_sim_agent_rationale_2",
@@ -259,110 +270,155 @@
       "label": "net.Conn",
       "_origin": "ast",
       "community": 1,
-      "community_name": "TCPStubServer",
+      "community_name": "TCPStub",
       "file_type": "code",
       "norm_label": "net.conn",
       "source_file": "",
       "source_location": ""
     },
     {
+      "id": "program_main_loadconfig",
+      "label": "LoadConfig()",
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "TCPStub",
+      "file_type": "code",
+      "norm_label": "loadconfig()",
+      "source_file": "Program/main.go",
+      "source_location": "L657"
+    },
+    {
       "id": "program_main_main",
       "label": "main()",
       "_origin": "ast",
       "community": 1,
-      "community_name": "TCPStubServer",
+      "community_name": "TCPStub",
       "file_type": "code",
       "norm_label": "main()",
       "source_file": "Program/main.go",
-      "source_location": "L706"
+      "source_location": "L684"
+    },
+    {
+      "id": "program_main_newhttpstubserver",
+      "label": "NewHTTPStubServer()",
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "TCPStub",
+      "file_type": "code",
+      "norm_label": "newhttpstubserver()",
+      "source_file": "Program/main.go",
+      "source_location": "L135"
     },
     {
       "id": "program_main_newtcpstubserver",
       "label": "NewTCPStubServer()",
       "_origin": "ast",
       "community": 1,
-      "community_name": "TCPStubServer",
+      "community_name": "TCPStub",
       "file_type": "code",
       "norm_label": "newtcpstubserver()",
       "source_file": "Program/main.go",
-      "source_location": "L253"
+      "source_location": "L251"
+    },
+    {
+      "id": "program_stubconfig",
+      "label": "StubConfig",
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "TCPStub",
+      "file_type": "code",
+      "norm_label": "stubconfig",
+      "source_file": "Program/main.go",
+      "source_location": "L22"
+    },
+    {
+      "id": "program_tcpstub",
+      "label": "TCPStub",
+      "_origin": "ast",
+      "community": 1,
+      "community_name": "TCPStub",
+      "file_type": "code",
+      "norm_label": "tcpstub",
+      "source_file": "Program/main.go",
+      "source_location": "L47"
     },
     {
       "id": "program_tcpstubserver",
       "label": "TCPStubServer",
       "_origin": "ast",
       "community": 1,
-      "community_name": "TCPStubServer",
+      "community_name": "TCPStub",
       "file_type": "code",
       "norm_label": "tcpstubserver",
       "source_file": "Program/main.go",
-      "source_location": "L248"
+      "source_location": "L246"
     },
     {
       "id": "program_tcpstubserver_addstub",
       "label": ".AddStub()",
       "_origin": "ast",
       "community": 1,
-      "community_name": "TCPStubServer",
+      "community_name": "TCPStub",
       "file_type": "code",
       "norm_label": ".addstub()",
       "source_file": "Program/main.go",
-      "source_location": "L260"
+      "source_location": "L258"
     },
     {
       "id": "program_tcpstubserver_handleconnection",
       "label": ".handleConnection()",
       "_origin": "ast",
       "community": 1,
-      "community_name": "TCPStubServer",
+      "community_name": "TCPStub",
       "file_type": "code",
       "norm_label": ".handleconnection()",
       "source_file": "Program/main.go",
-      "source_location": "L571"
+      "source_location": "L581"
     },
     {
       "id": "program_tcpstubserver_listentcp",
       "label": ".listenTCP()",
       "_origin": "ast",
       "community": 1,
-      "community_name": "TCPStubServer",
+      "community_name": "TCPStub",
       "file_type": "code",
       "norm_label": ".listentcp()",
       "source_file": "Program/main.go",
-      "source_location": "L293"
+      "source_location": "L275"
     },
     {
       "id": "program_tcpstubserver_start",
       "label": ".Start()",
       "_origin": "ast",
       "community": 1,
-      "community_name": "TCPStubServer",
+      "community_name": "TCPStub",
       "file_type": "code",
       "norm_label": ".start()",
       "source_file": "Program/main.go",
-      "source_location": "L275"
-    },
-    {
-      "id": "program_tcpstubserver_stubcount",
-      "label": ".StubCount()",
-      "_origin": "ast",
-      "community": 1,
-      "community_name": "TCPStubServer",
-      "file_type": "code",
-      "norm_label": ".stubcount()",
-      "source_file": "Program/main.go",
-      "source_location": "L266"
+      "source_location": "L263"
     },
     {
       "id": "program_tcpstubserver_validaterequest",
       "label": ".validateRequest()",
       "_origin": "ast",
       "community": 1,
-      "community_name": "TCPStubServer",
+      "community_name": "TCPStub",
       "file_type": "code",
       "norm_label": ".validaterequest()",
       "source_file": "Program/main.go",
-      "source_location": "L341"
+      "source_location": "L299"
+    },
+    {
+      "id": "dataflow",
+      "label": "Dataflow.md",
+      "_origin": "ast",
+      "community": 10,
+      "community_name": "Dataflow.md",
+      "file_type": "document",
+      "node_kind": "page",
+      "norm_label": "dataflow.md",
+      "source_file": "Dataflow.md",
+      "source_location": "L1"
     },
     {
       "id": "pkg_stubserver",
@@ -378,6 +434,17 @@
       "type": "package"
     },
     {
+      "id": "program_fieldcopy",
+      "label": "FieldCopy",
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "Program/main.go",
+      "file_type": "code",
+      "norm_label": "fieldcopy",
+      "source_file": "Program/main.go",
+      "source_location": "L72"
+    },
+    {
       "id": "program_main",
       "label": "Program/main.go",
       "_origin": "ast",
@@ -389,15 +456,26 @@
       "source_location": "L1"
     },
     {
-      "id": "program_main_applyoverrides",
-      "label": "applyOverrides()",
+      "id": "program_main_applyfieldcopies",
+      "label": "applyFieldCopies()",
       "_origin": "ast",
       "community": 2,
       "community_name": "Program/main.go",
       "file_type": "code",
-      "norm_label": "applyoverrides()",
+      "norm_label": "applyfieldcopies()",
       "source_file": "Program/main.go",
-      "source_location": "L644"
+      "source_location": "L331"
+    },
+    {
+      "id": "program_main_applyrandomfields",
+      "label": "applyRandomFields()",
+      "_origin": "ast",
+      "community": 2,
+      "community_name": "Program/main.go",
+      "file_type": "code",
+      "norm_label": "applyrandomfields()",
+      "source_file": "Program/main.go",
+      "source_location": "L361"
     },
     {
       "id": "program_main_buildfields",
@@ -408,7 +486,7 @@
       "file_type": "code",
       "norm_label": "buildfields()",
       "source_file": "Program/main.go",
-      "source_location": "L437"
+      "source_location": "L436"
     },
     {
       "id": "program_main_buildresponse",
@@ -419,7 +497,7 @@
       "file_type": "code",
       "norm_label": "buildresponse()",
       "source_file": "Program/main.go",
-      "source_location": "L543"
+      "source_location": "L533"
     },
     {
       "id": "program_main_encodefieldvalue",
@@ -430,27 +508,16 @@
       "file_type": "code",
       "norm_label": "encodefieldvalue()",
       "source_file": "Program/main.go",
-      "source_location": "L383"
+      "source_location": "L402"
     },
     {
-      "id": "program_main_loadconfig",
-      "label": "LoadConfig()",
+      "id": "program_main_min",
+      "label": "min()",
       "_origin": "ast",
       "community": 2,
       "community_name": "Program/main.go",
       "file_type": "code",
-      "norm_label": "loadconfig()",
-      "source_file": "Program/main.go",
-      "source_location": "L679"
-    },
-    {
-      "id": "program_main_matchstub",
-      "label": "matchStub()",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "Program/main.go",
-      "file_type": "code",
-      "norm_label": "matchstub()",
+      "norm_label": "min()",
       "source_file": "Program/main.go",
       "source_location": "L320"
     },
@@ -463,7 +530,7 @@
       "file_type": "code",
       "norm_label": "ordefault()",
       "source_file": "Program/main.go",
-      "source_location": "L424"
+      "source_location": "L422"
     },
     {
       "id": "program_main_pickresponsevariant",
@@ -474,40 +541,18 @@
       "file_type": "code",
       "norm_label": "pickresponsevariant()",
       "source_file": "Program/main.go",
-      "source_location": "L512"
+      "source_location": "L501"
     },
     {
-      "id": "program_stubconfig",
-      "label": "StubConfig",
+      "id": "program_randomfield",
+      "label": "RandomField",
       "_origin": "ast",
       "community": 2,
       "community_name": "Program/main.go",
       "file_type": "code",
-      "norm_label": "stubconfig",
+      "norm_label": "randomfield",
       "source_file": "Program/main.go",
-      "source_location": "L23"
-    },
-    {
-      "id": "program_tcpmatch",
-      "label": "TCPMatch",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "Program/main.go",
-      "file_type": "code",
-      "norm_label": "tcpmatch",
-      "source_file": "Program/main.go",
-      "source_location": "L81"
-    },
-    {
-      "id": "program_tcpmeta",
-      "label": "TCPMeta",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "Program/main.go",
-      "file_type": "code",
-      "norm_label": "tcpmeta",
-      "source_file": "Program/main.go",
-      "source_location": "L67"
+      "source_location": "L84"
     },
     {
       "id": "program_tcpresponsefield",
@@ -518,7 +563,7 @@
       "file_type": "code",
       "norm_label": "tcpresponsefield",
       "source_file": "Program/main.go",
-      "source_location": "L102"
+      "source_location": "L114"
     },
     {
       "id": "program_tcpresponsevariant",
@@ -529,18 +574,7 @@
       "file_type": "code",
       "norm_label": "tcpresponsevariant",
       "source_file": "Program/main.go",
-      "source_location": "L89"
-    },
-    {
-      "id": "program_tcpstub",
-      "label": "TCPStub",
-      "_origin": "ast",
-      "community": 2,
-      "community_name": "Program/main.go",
-      "file_type": "code",
-      "norm_label": "tcpstub",
-      "source_file": "Program/main.go",
-      "source_location": "L49"
+      "source_location": "L94"
     },
     {
       "id": "go_type_net_http_request",
@@ -573,7 +607,7 @@
       "file_type": "code",
       "norm_label": "httpresponse",
       "source_file": "Program/main.go",
-      "source_location": "L41"
+      "source_location": "L39"
     },
     {
       "id": "program_httpstub",
@@ -584,7 +618,7 @@
       "file_type": "code",
       "norm_label": "httpstub",
       "source_file": "Program/main.go",
-      "source_location": "L29"
+      "source_location": "L28"
     },
     {
       "id": "program_httpstubserver",
@@ -595,7 +629,7 @@
       "file_type": "code",
       "norm_label": "httpstubserver",
       "source_file": "Program/main.go",
-      "source_location": "L124"
+      "source_location": "L130"
     },
     {
       "id": "program_httpstubserver_addstub",
@@ -606,7 +640,7 @@
       "file_type": "code",
       "norm_label": ".addstub()",
       "source_file": "Program/main.go",
-      "source_location": "L136"
+      "source_location": "L142"
     },
     {
       "id": "program_httpstubserver_matchrequest",
@@ -617,7 +651,7 @@
       "file_type": "code",
       "norm_label": ".matchrequest()",
       "source_file": "Program/main.go",
-      "source_location": "L141"
+      "source_location": "L147"
     },
     {
       "id": "program_httpstubserver_servehttp",
@@ -628,18 +662,7 @@
       "file_type": "code",
       "norm_label": ".servehttp()",
       "source_file": "Program/main.go",
-      "source_location": "L220"
-    },
-    {
-      "id": "program_main_jsonfieldat",
-      "label": "jsonFieldAt()",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "HTTPStub",
-      "file_type": "code",
-      "norm_label": "jsonfieldat()",
-      "source_file": "Program/main.go",
-      "source_location": "L198"
+      "source_location": "L219"
     },
     {
       "id": "program_main_jsonfieldmatches",
@@ -650,62 +673,7 @@
       "file_type": "code",
       "norm_label": "jsonfieldmatches()",
       "source_file": "Program/main.go",
-      "source_location": "L214"
-    },
-    {
-      "id": "program_main_newhttpstubserver",
-      "label": "NewHTTPStubServer()",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "HTTPStub",
-      "file_type": "code",
-      "norm_label": "newhttpstubserver()",
-      "source_file": "Program/main.go",
-      "source_location": "L129"
-    },
-    {
-      "id": "program_wsbridge_main",
-      "label": "wsbridge/main.go",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "HTTPStub",
-      "file_type": "code",
-      "norm_label": "wsbridge/main.go",
-      "source_file": "Program/wsbridge/main.go",
-      "source_location": "L1"
-    },
-    {
-      "id": "program_wsbridge_main_main",
-      "label": "main()",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "HTTPStub",
-      "file_type": "code",
-      "norm_label": "main()",
-      "source_file": "Program/wsbridge/main.go",
-      "source_location": "L139"
-    },
-    {
-      "id": "program_wsbridge_main_newbridge",
-      "label": "NewBridge()",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "HTTPStub",
-      "file_type": "code",
-      "norm_label": "newbridge()",
-      "source_file": "Program/wsbridge/main.go",
-      "source_location": "L26"
-    },
-    {
-      "id": "wsbridge_bridge",
-      "label": "Bridge",
-      "_origin": "ast",
-      "community": 3,
-      "community_name": "HTTPStub",
-      "file_type": "code",
-      "norm_label": "bridge",
-      "source_file": "Program/wsbridge/main.go",
-      "source_location": "L21"
+      "source_location": "L202"
     },
     {
       "id": "wsbridge_bridge_handlehealth",
@@ -741,59 +709,59 @@
       "source_location": ""
     },
     {
-      "id": "go_type_testing_t",
-      "label": "testing.T",
+      "id": "program_wsbridge_main",
+      "label": "wsbridge/main.go",
       "_origin": "ast",
       "community": 5,
-      "community_name": "TestEncodeFieldValue",
+      "community_name": "wsbridge/main.go",
       "file_type": "code",
-      "norm_label": "testing.t",
-      "source_file": "",
-      "source_location": ""
-    },
-    {
-      "id": "program_encoding_test",
-      "label": "encoding_test.go",
-      "_origin": "ast",
-      "community": 5,
-      "community_name": "TestEncodeFieldValue",
-      "file_type": "code",
-      "norm_label": "encoding_test.go",
-      "source_file": "Program/encoding_test.go",
+      "norm_label": "wsbridge/main.go",
+      "source_file": "Program/wsbridge/main.go",
       "source_location": "L1"
     },
     {
-      "id": "program_encoding_test_testencodefieldvalue",
-      "label": "TestEncodeFieldValue()",
+      "id": "program_wsbridge_main_main",
+      "label": "main()",
       "_origin": "ast",
       "community": 5,
-      "community_name": "TestEncodeFieldValue",
+      "community_name": "wsbridge/main.go",
       "file_type": "code",
-      "norm_label": "testencodefieldvalue()",
-      "source_file": "Program/encoding_test.go",
-      "source_location": "L8"
+      "norm_label": "main()",
+      "source_file": "Program/wsbridge/main.go",
+      "source_location": "L135"
     },
     {
-      "id": "program_overrides_test",
-      "label": "overrides_test.go",
+      "id": "program_wsbridge_main_min",
+      "label": "min()",
       "_origin": "ast",
       "community": 5,
-      "community_name": "TestEncodeFieldValue",
+      "community_name": "wsbridge/main.go",
       "file_type": "code",
-      "norm_label": "overrides_test.go",
-      "source_file": "Program/overrides_test.go",
-      "source_location": "L1"
+      "norm_label": "min()",
+      "source_file": "Program/wsbridge/main.go",
+      "source_location": "L128"
     },
     {
-      "id": "program_overrides_test_testapplyoverrides",
-      "label": "TestApplyOverrides()",
+      "id": "program_wsbridge_main_newbridge",
+      "label": "NewBridge()",
       "_origin": "ast",
       "community": 5,
-      "community_name": "TestEncodeFieldValue",
+      "community_name": "wsbridge/main.go",
       "file_type": "code",
-      "norm_label": "testapplyoverrides()",
-      "source_file": "Program/overrides_test.go",
-      "source_location": "L5"
+      "norm_label": "newbridge()",
+      "source_file": "Program/wsbridge/main.go",
+      "source_location": "L26"
+    },
+    {
+      "id": "wsbridge_bridge",
+      "label": "Bridge",
+      "_origin": "ast",
+      "community": 5,
+      "community_name": "wsbridge/main.go",
+      "file_type": "code",
+      "norm_label": "bridge",
+      "source_file": "Program/wsbridge/main.go",
+      "source_location": "L21"
     },
     {
       "id": "readme",
@@ -820,15 +788,40 @@
       "source_location": "L1"
     },
     {
-      "id": "agent_sim_agent_rationale_166",
-      "label": "Caller must hold _LOCK for the whole call. Blocks other requests for up to ~5s\u2026",
+      "id": "architecture",
+      "label": "Architecture.md",
       "_origin": "ast",
       "community": 7,
-      "community_name": "_stop_locked",
-      "file_type": "rationale",
-      "norm_label": "caller must hold _lock for the whole call. blocks other requests for up to ~5s...",
-      "source_file": "agent/sim_agent.py",
-      "source_location": "L166"
+      "community_name": "Architecture.md",
+      "file_type": "document",
+      "node_kind": "page",
+      "norm_label": "architecture.md",
+      "source_file": "Architecture.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "big_archtecture",
+      "label": "Big_Archtecture.md",
+      "_origin": "ast",
+      "community": 8,
+      "community_name": "Big_Archtecture.md",
+      "file_type": "document",
+      "node_kind": "page",
+      "norm_label": "big_archtecture.md",
+      "source_file": "Big_Archtecture.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "components",
+      "label": "Components.md",
+      "_origin": "ast",
+      "community": 9,
+      "community_name": "Components.md",
+      "file_type": "document",
+      "node_kind": "page",
+      "norm_label": "components.md",
+      "source_file": "Components.md",
+      "source_location": "L1"
     }
   ],
   "links": [
@@ -841,7 +834,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "agent/sim_agent.py",
-      "source_location": "L194",
+      "source_location": "L186",
       "weight": 1.0
     },
     {
@@ -853,7 +846,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "agent/sim_agent.py",
-      "source_location": "L195",
+      "source_location": "L187",
       "weight": 1.0
     },
     {
@@ -865,7 +858,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "agent/sim_agent.py",
-      "source_location": "L439",
+      "source_location": "L398",
       "weight": 1.0
     },
     {
@@ -877,7 +870,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "agent/sim_agent.py",
-      "source_location": "L439",
+      "source_location": "L398",
       "weight": 1.0
     },
     {
@@ -889,7 +882,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "agent/sim_agent.py",
-      "source_location": "L459",
+      "source_location": "L413",
       "weight": 1.0
     },
     {
@@ -901,7 +894,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "agent/sim_agent.py",
-      "source_location": "L461",
+      "source_location": "L415",
       "weight": 1.0
     },
     {
@@ -913,7 +906,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "agent/sim_agent.py",
-      "source_location": "L387",
+      "source_location": "L357",
       "weight": 1.0
     },
     {
@@ -925,7 +918,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "agent/sim_agent.py",
-      "source_location": "L390",
+      "source_location": "L360",
       "weight": 1.0
     },
     {
@@ -937,7 +930,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "agent/sim_agent.py",
-      "source_location": "L400",
+      "source_location": "L361",
       "weight": 1.0
     },
     {
@@ -949,7 +942,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "agent/sim_agent.py",
-      "source_location": "L415",
+      "source_location": "L376",
       "weight": 1.0
     },
     {
@@ -961,7 +954,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "agent/sim_agent.py",
-      "source_location": "L421",
+      "source_location": "L382",
       "weight": 1.0
     },
     {
@@ -973,7 +966,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "agent/sim_agent.py",
-      "source_location": "L483",
+      "source_location": "L437",
       "weight": 1.0
     },
     {
@@ -985,7 +978,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "agent/sim_agent.py",
-      "source_location": "L149",
+      "source_location": "L141",
       "weight": 1.0
     },
     {
@@ -997,7 +990,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "agent/sim_agent.py",
-      "source_location": "L238",
+      "source_location": "L220",
       "weight": 1.0
     },
     {
@@ -1009,7 +1002,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "agent/sim_agent.py",
-      "source_location": "L274",
+      "source_location": "L248",
       "weight": 1.0
     },
     {
@@ -1021,7 +1014,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "agent/sim_agent.py",
-      "source_location": "L298",
+      "source_location": "L272",
       "weight": 1.0
     },
     {
@@ -1033,7 +1026,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "agent/sim_agent.py",
-      "source_location": "L308",
+      "source_location": "L282",
       "weight": 1.0
     },
     {
@@ -1045,7 +1038,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "agent/sim_agent.py",
-      "source_location": "L309",
+      "source_location": "L283",
       "weight": 1.0
     },
     {
@@ -1057,19 +1050,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "Program/main.go",
-      "source_location": "L180",
-      "weight": 1.0
-    },
-    {
-      "source": "program_httpstubserver_matchrequest",
-      "target": "program_main_jsonfieldat",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "Program/main.go",
-      "source_location": "L185",
+      "source_location": "L191",
       "weight": 1.0
     },
     {
@@ -1081,7 +1062,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "Program/main.go",
-      "source_location": "L224",
+      "source_location": "L223",
       "weight": 1.0
     },
     {
@@ -1093,7 +1074,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "Program/main.go",
-      "source_location": "L455",
+      "source_location": "L451",
       "weight": 1.0
     },
     {
@@ -1105,7 +1086,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "Program/main.go",
-      "source_location": "L492",
+      "source_location": "L493",
       "weight": 1.0
     },
     {
@@ -1117,7 +1098,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "Program/main.go",
-      "source_location": "L544",
+      "source_location": "L534",
       "weight": 1.0
     },
     {
@@ -1129,7 +1110,31 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "Program/main.go",
-      "source_location": "L563",
+      "source_location": "L559",
+      "weight": 1.0
+    },
+    {
+      "source": "program_main_buildresponse",
+      "target": "program_main_applyfieldcopies",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "Program/main.go",
+      "source_location": "L574",
+      "weight": 1.0
+    },
+    {
+      "source": "program_main_buildresponse",
+      "target": "program_main_applyrandomfields",
+      "relation": "calls",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "call",
+      "source_file": "Program/main.go",
+      "source_location": "L575",
       "weight": 1.0
     },
     {
@@ -1141,19 +1146,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "Program/main.go",
-      "source_location": "L419",
-      "weight": 1.0
-    },
-    {
-      "source": "program_main_jsonfieldmatches",
-      "target": "program_main_jsonfieldat",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "Program/main.go",
-      "source_location": "L215",
+      "source_location": "L417",
       "weight": 1.0
     },
     {
@@ -1165,7 +1158,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "Program/main.go",
-      "source_location": "L717",
+      "source_location": "L689",
       "weight": 1.0
     },
     {
@@ -1177,7 +1170,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "Program/main.go",
-      "source_location": "L718",
+      "source_location": "L690",
       "weight": 1.0
     },
     {
@@ -1189,7 +1182,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "Program/main.go",
-      "source_location": "L721",
+      "source_location": "L693",
       "weight": 1.0
     },
     {
@@ -1201,19 +1194,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "Program/main.go",
-      "source_location": "L727",
-      "weight": 1.0
-    },
-    {
-      "source": "program_main_main",
-      "target": "program_main_applyoverrides",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "Program/main.go",
-      "source_location": "L731",
+      "source_location": "L699",
       "weight": 1.0
     },
     {
@@ -1225,31 +1206,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "Program/main.go",
-      "source_location": "L759",
-      "weight": 1.0
-    },
-    {
-      "source": "program_main_main",
-      "target": "program_tcpstubserver_stubcount",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "Program/main.go",
-      "source_location": "L767",
-      "weight": 1.0
-    },
-    {
-      "source": "program_tcpstubserver_handleconnection",
-      "target": "program_main_matchstub",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "call",
-      "source_file": "Program/main.go",
-      "source_location": "L588",
+      "source_location": "L728",
       "weight": 1.0
     },
     {
@@ -1273,7 +1230,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "Program/main.go",
-      "source_location": "L618",
+      "source_location": "L620",
       "weight": 1.0
     },
     {
@@ -1285,7 +1242,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "Program/main.go",
-      "source_location": "L313",
+      "source_location": "L294",
       "weight": 1.0
     },
     {
@@ -1297,7 +1254,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "Program/main.go",
-      "source_location": "L278",
+      "source_location": "L266",
       "weight": 1.0
     },
     {
@@ -1309,7 +1266,7 @@
       "confidence_score": 1.0,
       "context": "call",
       "source_file": "Program/wsbridge/main.go",
-      "source_location": "L157",
+      "source_location": "L141",
       "weight": 1.0
     },
     {
@@ -1321,7 +1278,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "Program/main.go",
-      "source_location": "L37",
+      "source_location": "L35",
       "weight": 1.0
     },
     {
@@ -1333,7 +1290,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "Program/main.go",
-      "source_location": "L125",
+      "source_location": "L131",
       "weight": 1.0
     },
     {
@@ -1345,7 +1302,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "Program/main.go",
-      "source_location": "L24",
+      "source_location": "L23",
       "weight": 1.0
     },
     {
@@ -1357,7 +1314,19 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "Program/main.go",
-      "source_location": "L25",
+      "source_location": "L24",
+      "weight": 1.0
+    },
+    {
+      "source": "program_tcpresponsevariant",
+      "target": "program_randomfield",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "field",
+      "source_file": "Program/main.go",
+      "source_location": "L100",
       "weight": 1.0
     },
     {
@@ -1369,7 +1338,43 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "Program/main.go",
-      "source_location": "L92",
+      "source_location": "L101",
+      "weight": 1.0
+    },
+    {
+      "source": "program_tcpresponsevariant",
+      "target": "program_fieldcopy",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "field",
+      "source_file": "Program/main.go",
+      "source_location": "L99",
+      "weight": 1.0
+    },
+    {
+      "source": "program_tcpstub",
+      "target": "program_fieldcopy",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "field",
+      "source_file": "Program/main.go",
+      "source_location": "L61",
+      "weight": 1.0
+    },
+    {
+      "source": "program_tcpstub",
+      "target": "program_randomfield",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "field",
+      "source_file": "Program/main.go",
+      "source_location": "L62",
       "weight": 1.0
     },
     {
@@ -1381,7 +1386,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "Program/main.go",
-      "source_location": "L57",
+      "source_location": "L63",
       "weight": 1.0
     },
     {
@@ -1393,31 +1398,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "Program/main.go",
-      "source_location": "L59",
-      "weight": 1.0
-    },
-    {
-      "source": "program_tcpstub",
-      "target": "program_tcpmatch",
-      "relation": "references",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "field",
-      "source_file": "Program/main.go",
-      "source_location": "L60",
-      "weight": 1.0
-    },
-    {
-      "source": "program_tcpstub",
-      "target": "program_tcpmeta",
-      "relation": "references",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "field",
-      "source_file": "Program/main.go",
-      "source_location": "L62",
+      "source_location": "L65",
       "weight": 1.0
     },
     {
@@ -1429,19 +1410,7 @@
       "confidence_score": 1.0,
       "context": "field",
       "source_file": "Program/main.go",
-      "source_location": "L249",
-      "weight": 1.0
-    },
-    {
-      "source": "program_encoding_test_testencodefieldvalue",
-      "target": "go_type_testing_t",
-      "relation": "references",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "parameter_type",
-      "source_file": "Program/encoding_test.go",
-      "source_location": "L8",
+      "source_location": "L247",
       "weight": 1.0
     },
     {
@@ -1453,7 +1422,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "Program/main.go",
-      "source_location": "L136",
+      "source_location": "L142",
       "weight": 1.0
     },
     {
@@ -1465,7 +1434,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "Program/main.go",
-      "source_location": "L141",
+      "source_location": "L147",
       "weight": 1.0
     },
     {
@@ -1477,7 +1446,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "Program/main.go",
-      "source_location": "L141",
+      "source_location": "L147",
       "weight": 1.0
     },
     {
@@ -1489,7 +1458,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "Program/main.go",
-      "source_location": "L220",
+      "source_location": "L219",
       "weight": 1.0
     },
     {
@@ -1501,19 +1470,31 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "Program/main.go",
-      "source_location": "L220",
+      "source_location": "L219",
       "weight": 1.0
     },
     {
-      "source": "program_main_applyoverrides",
-      "target": "program_tcpstub",
+      "source": "program_main_applyfieldcopies",
+      "target": "program_fieldcopy",
       "relation": "references",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "Program/main.go",
-      "source_location": "L644",
+      "source_location": "L331",
+      "weight": 1.0
+    },
+    {
+      "source": "program_main_applyrandomfields",
+      "target": "program_randomfield",
+      "relation": "references",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "context": "parameter_type",
+      "source_file": "Program/main.go",
+      "source_location": "L361",
       "weight": 1.0
     },
     {
@@ -1525,7 +1506,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "Program/main.go",
-      "source_location": "L437",
+      "source_location": "L436",
       "weight": 1.0
     },
     {
@@ -1537,7 +1518,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "Program/main.go",
-      "source_location": "L543",
+      "source_location": "L533",
       "weight": 1.0
     },
     {
@@ -1549,19 +1530,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "Program/main.go",
-      "source_location": "L512",
-      "weight": 1.0
-    },
-    {
-      "source": "program_overrides_test_testapplyoverrides",
-      "target": "go_type_testing_t",
-      "relation": "references",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "parameter_type",
-      "source_file": "Program/overrides_test.go",
-      "source_location": "L5",
+      "source_location": "L501",
       "weight": 1.0
     },
     {
@@ -1573,7 +1542,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "Program/main.go",
-      "source_location": "L260",
+      "source_location": "L258",
       "weight": 1.0
     },
     {
@@ -1585,7 +1554,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "Program/main.go",
-      "source_location": "L571",
+      "source_location": "L581",
       "weight": 1.0
     },
     {
@@ -1597,7 +1566,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "Program/main.go",
-      "source_location": "L571",
+      "source_location": "L581",
       "weight": 1.0
     },
     {
@@ -1609,7 +1578,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "Program/main.go",
-      "source_location": "L293",
+      "source_location": "L275",
       "weight": 1.0
     },
     {
@@ -1621,7 +1590,7 @@
       "confidence_score": 1.0,
       "context": "parameter_type",
       "source_file": "Program/main.go",
-      "source_location": "L341",
+      "source_location": "L299",
       "weight": 1.0
     },
     {
@@ -1681,19 +1650,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "Program/main.go",
-      "source_location": "L679",
-      "weight": 1.0
-    },
-    {
-      "source": "program_main_matchstub",
-      "target": "program_tcpstub",
-      "relation": "references",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "context": "return_type",
-      "source_file": "Program/main.go",
-      "source_location": "L320",
+      "source_location": "L657",
       "weight": 1.0
     },
     {
@@ -1705,7 +1662,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "Program/main.go",
-      "source_location": "L129",
+      "source_location": "L135",
       "weight": 1.0
     },
     {
@@ -1717,7 +1674,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "Program/main.go",
-      "source_location": "L253",
+      "source_location": "L251",
       "weight": 1.0
     },
     {
@@ -1729,7 +1686,7 @@
       "confidence_score": 1.0,
       "context": "return_type",
       "source_file": "Program/main.go",
-      "source_location": "L512",
+      "source_location": "L501",
       "weight": 1.0
     },
     {
@@ -1752,7 +1709,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "agent/sim_agent.py",
-      "source_location": "L114",
+      "source_location": "L109",
       "weight": 1.0
     },
     {
@@ -1763,7 +1720,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "agent/sim_agent.py",
-      "source_location": "L120",
+      "source_location": "L115",
       "weight": 1.0
     },
     {
@@ -1774,7 +1731,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "agent/sim_agent.py",
-      "source_location": "L147",
+      "source_location": "L139",
       "weight": 1.0
     },
     {
@@ -1785,7 +1742,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "agent/sim_agent.py",
-      "source_location": "L165",
+      "source_location": "L157",
       "weight": 1.0
     },
     {
@@ -1796,7 +1753,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "agent/sim_agent.py",
-      "source_location": "L187",
+      "source_location": "L179",
       "weight": 1.0
     },
     {
@@ -1807,7 +1764,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "agent/sim_agent.py",
-      "source_location": "L198",
+      "source_location": "L190",
       "weight": 1.0
     },
     {
@@ -1818,7 +1775,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "agent/sim_agent.py",
-      "source_location": "L301",
+      "source_location": "L275",
       "weight": 1.0
     },
     {
@@ -1829,7 +1786,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "agent/sim_agent.py",
-      "source_location": "L312",
+      "source_location": "L286",
       "weight": 1.0
     },
     {
@@ -1840,7 +1797,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "agent/sim_agent.py",
-      "source_location": "L327",
+      "source_location": "L301",
       "weight": 1.0
     },
     {
@@ -1851,7 +1808,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "agent/sim_agent.py",
-      "source_location": "L332",
+      "source_location": "L306",
       "weight": 1.0
     },
     {
@@ -1862,7 +1819,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "agent/sim_agent.py",
-      "source_location": "L351",
+      "source_location": "L321",
       "weight": 1.0
     },
     {
@@ -1873,7 +1830,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "agent/sim_agent.py",
-      "source_location": "L470",
+      "source_location": "L424",
       "weight": 1.0
     },
     {
@@ -1884,18 +1841,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "agent/sim_agent.py",
-      "source_location": "L64",
-      "weight": 1.0
-    },
-    {
-      "source": "program_encoding_test",
-      "target": "program_encoding_test_testencodefieldvalue",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Program/encoding_test.go",
-      "source_location": "L8",
+      "source_location": "L61",
       "weight": 1.0
     },
     {
@@ -1906,7 +1852,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "Program/main.go",
-      "source_location": "L102",
+      "source_location": "L114",
       "weight": 1.0
     },
     {
@@ -1917,7 +1863,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "Program/main.go",
-      "source_location": "L124",
+      "source_location": "L130",
       "weight": 1.0
     },
     {
@@ -1928,18 +1874,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "Program/main.go",
-      "source_location": "L129",
-      "weight": 1.0
-    },
-    {
-      "source": "program_main",
-      "target": "program_main_jsonfieldat",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Program/main.go",
-      "source_location": "L198",
+      "source_location": "L135",
       "weight": 1.0
     },
     {
@@ -1950,7 +1885,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "Program/main.go",
-      "source_location": "L214",
+      "source_location": "L202",
       "weight": 1.0
     },
     {
@@ -1961,7 +1896,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "Program/main.go",
-      "source_location": "L23",
+      "source_location": "L22",
       "weight": 1.0
     },
     {
@@ -1972,7 +1907,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "Program/main.go",
-      "source_location": "L248",
+      "source_location": "L246",
       "weight": 1.0
     },
     {
@@ -1983,7 +1918,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "Program/main.go",
-      "source_location": "L253",
+      "source_location": "L251",
       "weight": 1.0
     },
     {
@@ -1994,12 +1929,12 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "Program/main.go",
-      "source_location": "L29",
+      "source_location": "L28",
       "weight": 1.0
     },
     {
       "source": "program_main",
-      "target": "program_main_matchstub",
+      "target": "program_main_min",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
@@ -2010,13 +1945,24 @@
     },
     {
       "source": "program_main",
-      "target": "program_main_encodefieldvalue",
+      "target": "program_main_applyfieldcopies",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "Program/main.go",
-      "source_location": "L383",
+      "source_location": "L331",
+      "weight": 1.0
+    },
+    {
+      "source": "program_main",
+      "target": "program_main_applyrandomfields",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "Program/main.go",
+      "source_location": "L361",
       "weight": 1.0
     },
     {
@@ -2027,7 +1973,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "Program/main.go",
-      "source_location": "L41",
+      "source_location": "L39",
+      "weight": 1.0
+    },
+    {
+      "source": "program_main",
+      "target": "program_main_encodefieldvalue",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "Program/main.go",
+      "source_location": "L402",
       "weight": 1.0
     },
     {
@@ -2038,7 +1995,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "Program/main.go",
-      "source_location": "L424",
+      "source_location": "L422",
       "weight": 1.0
     },
     {
@@ -2049,7 +2006,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "Program/main.go",
-      "source_location": "L437",
+      "source_location": "L436",
       "weight": 1.0
     },
     {
@@ -2060,7 +2017,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "Program/main.go",
-      "source_location": "L49",
+      "source_location": "L47",
       "weight": 1.0
     },
     {
@@ -2071,7 +2028,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "Program/main.go",
-      "source_location": "L512",
+      "source_location": "L501",
       "weight": 1.0
     },
     {
@@ -2082,29 +2039,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "Program/main.go",
-      "source_location": "L543",
-      "weight": 1.0
-    },
-    {
-      "source": "program_main",
-      "target": "program_main_applyoverrides",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Program/main.go",
-      "source_location": "L644",
-      "weight": 1.0
-    },
-    {
-      "source": "program_main",
-      "target": "program_tcpmeta",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Program/main.go",
-      "source_location": "L67",
+      "source_location": "L533",
       "weight": 1.0
     },
     {
@@ -2115,7 +2050,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "Program/main.go",
-      "source_location": "L679",
+      "source_location": "L657",
       "weight": 1.0
     },
     {
@@ -2126,18 +2061,29 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "Program/main.go",
-      "source_location": "L706",
+      "source_location": "L684",
       "weight": 1.0
     },
     {
       "source": "program_main",
-      "target": "program_tcpmatch",
+      "target": "program_fieldcopy",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "Program/main.go",
-      "source_location": "L81",
+      "source_location": "L72",
+      "weight": 1.0
+    },
+    {
+      "source": "program_main",
+      "target": "program_randomfield",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "Program/main.go",
+      "source_location": "L84",
       "weight": 1.0
     },
     {
@@ -2148,18 +2094,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "Program/main.go",
-      "source_location": "L89",
+      "source_location": "L94",
       "weight": 1.0
     },
     {
-      "source": "program_overrides_test",
-      "target": "program_overrides_test_testapplyoverrides",
+      "source": "program_wsbridge_main",
+      "target": "program_wsbridge_main_min",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
-      "source_file": "Program/overrides_test.go",
-      "source_location": "L5",
+      "source_file": "Program/wsbridge/main.go",
+      "source_location": "L128",
       "weight": 1.0
     },
     {
@@ -2170,7 +2116,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "Program/wsbridge/main.go",
-      "source_location": "L139",
+      "source_location": "L135",
       "weight": 1.0
     },
     {
@@ -2214,7 +2160,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "agent/sim_agent.py",
-      "source_location": "L351",
+      "source_location": "L321",
       "weight": 1.0
     },
     {
@@ -2225,7 +2171,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "agent/sim_agent.py",
-      "source_location": "L352",
+      "source_location": "L322",
       "weight": 1.0
     },
     {
@@ -2236,7 +2182,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "agent/sim_agent.py",
-      "source_location": "L360",
+      "source_location": "L330",
       "weight": 1.0
     },
     {
@@ -2247,7 +2193,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "agent/sim_agent.py",
-      "source_location": "L368",
+      "source_location": "L338",
       "weight": 1.0
     },
     {
@@ -2258,7 +2204,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "agent/sim_agent.py",
-      "source_location": "L371",
+      "source_location": "L341",
       "weight": 1.0
     },
     {
@@ -2269,7 +2215,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "agent/sim_agent.py",
-      "source_location": "L383",
+      "source_location": "L353",
       "weight": 1.0
     },
     {
@@ -2280,7 +2226,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "agent/sim_agent.py",
-      "source_location": "L433",
+      "source_location": "L392",
       "weight": 1.0
     },
     {
@@ -2291,7 +2237,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "Program/main.go",
-      "source_location": "L136",
+      "source_location": "L142",
       "weight": 1.0
     },
     {
@@ -2302,7 +2248,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "Program/main.go",
-      "source_location": "L141",
+      "source_location": "L147",
       "weight": 1.0
     },
     {
@@ -2313,7 +2259,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "Program/main.go",
-      "source_location": "L220",
+      "source_location": "L219",
       "weight": 1.0
     },
     {
@@ -2324,18 +2270,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "Program/main.go",
-      "source_location": "L260",
-      "weight": 1.0
-    },
-    {
-      "source": "program_tcpstubserver",
-      "target": "program_tcpstubserver_stubcount",
-      "relation": "method",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "Program/main.go",
-      "source_location": "L266",
+      "source_location": "L258",
       "weight": 1.0
     },
     {
@@ -2346,7 +2281,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "Program/main.go",
-      "source_location": "L275",
+      "source_location": "L263",
       "weight": 1.0
     },
     {
@@ -2357,7 +2292,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "Program/main.go",
-      "source_location": "L293",
+      "source_location": "L275",
       "weight": 1.0
     },
     {
@@ -2368,7 +2303,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "Program/main.go",
-      "source_location": "L341",
+      "source_location": "L299",
       "weight": 1.0
     },
     {
@@ -2379,7 +2314,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "Program/main.go",
-      "source_location": "L571",
+      "source_location": "L581",
       "weight": 1.0
     },
     {
@@ -2405,14 +2340,14 @@
       "weight": 1.0
     },
     {
-      "source": "agent_sim_agent_rationale_166",
+      "source": "agent_sim_agent_rationale_158",
       "target": "agent_sim_agent_stop_locked",
       "relation": "rationale_for",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "agent/sim_agent.py",
-      "source_location": "L166",
+      "source_location": "L158",
       "weight": 1.0
     },
     {
@@ -2435,7 +2370,7 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "agent/sim_agent.py",
-      "source_location": "L277",
+      "source_location": "L251",
       "weight": 1.0
     },
     {
@@ -2447,34 +2382,10 @@
       "confidence_score": 0.85,
       "context": "argument",
       "source_file": "agent/sim_agent.py",
-      "source_location": "L297",
-      "weight": 1.0
-    },
-    {
-      "source": "program_encoding_test_testencodefieldvalue",
-      "target": "program_main_encodefieldvalue",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "INFERRED",
-      "confidence_score": 0.85,
-      "context": "call",
-      "source_file": "Program/encoding_test.go",
-      "source_location": "L27",
-      "weight": 1.0
-    },
-    {
-      "source": "program_overrides_test_testapplyoverrides",
-      "target": "program_main_applyoverrides",
-      "relation": "calls",
-      "_origin": "ast",
-      "confidence": "INFERRED",
-      "confidence_score": 0.85,
-      "context": "call",
-      "source_file": "Program/overrides_test.go",
-      "source_location": "L11",
+      "source_location": "L271",
       "weight": 1.0
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "0c0a6f26525b5410f6991b1d09366afaaa9b7bd1"
+  "built_at_commit": "2712e1a49eeb21f4b27f2716b7459f7ab23570c8"
 }

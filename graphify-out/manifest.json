@@ -6,63 +6,45 @@
     "semantic_hash": ""
   },
   "Program/main.go": {
-    "mtime": 1789442260.3758595,
-    "seen": 1789653809.235821,
-    "ast_hash": "69c6bdcfea3c330862ba5a331d44f0b0",
+    "mtime": 1790085747.1199076,
+    "seen": 1790085786.060541,
+    "ast_hash": "0f5956243a48e74be8dd946cd042b436",
     "semantic_hash": ""
   },
   "Program/wsbridge/main.go": {
-    "mtime": 1762277833.5202992,
-    "seen": 1789653809.235822,
-    "ast_hash": "3f32e7265f7b6cf53c531906f95b60f8",
+    "mtime": 1789655165.7638657,
+    "seen": 1790085786.060543,
+    "ast_hash": "7be15f384520c6298ed9077516850f4a",
     "semantic_hash": ""
   },
   "agent/sim_agent.py": {
-    "mtime": 1789441414.8484375,
-    "seen": 1789653809.2358232,
-    "ast_hash": "1529fc2979c963741568f32c62083769",
-    "semantic_hash": ""
-  },
-  "Architecture.md": {
-    "mtime": 1761931989.4202168,
-    "seen": 1789653809.235824,
-    "ast_hash": "1713680fdc882fb7f55efb67201fb052",
-    "semantic_hash": ""
-  },
-  "Big_Archtecture.md": {
-    "mtime": 1769012354.7318096,
-    "seen": 1789653809.235824,
-    "ast_hash": "8038db460d73a85cbda250c7f710a563",
-    "semantic_hash": ""
-  },
-  "Components.md": {
-    "mtime": 1761931989.4203331,
-    "seen": 1789653809.2358248,
-    "ast_hash": "0d5291903d5166727bcb1f7f897f69af",
-    "semantic_hash": ""
-  },
-  "Dataflow.md": {
-    "mtime": 1761931989.4204237,
-    "seen": 1789653809.2358248,
-    "ast_hash": "ba0131f4d4bddb3247a17d7ec5cd2efa",
+    "mtime": 1789746009.6733081,
+    "seen": 1790085786.060544,
+    "ast_hash": "f36a8f55ce0a5cb1d9c1a5dc5ef49794",
     "semantic_hash": ""
   },
   "Program/STUBS.yaml": {
-    "mtime": 1788185808.1342301,
-    "seen": 1789653809.235826,
-    "ast_hash": "6688d6fb65d3c45ebbbecafb6f81730f",
-    "semantic_hash": ""
-  },
-  "Program/STUBS_OSCHEMA.yaml": {
-    "mtime": 1762448166.3033037,
-    "seen": 1789653809.235826,
-    "ast_hash": "6ca5a7a3bee74cab8678297ea33d1394",
+    "mtime": 1790085768.736134,
+    "seen": 1790085786.060544,
+    "ast_hash": "ea1c7c588e51a50c3cf546431810696a",
     "semantic_hash": ""
   },
   "README.md": {
     "mtime": 1761931989.42052,
     "seen": 1789653809.235827,
     "ast_hash": "2bcd1ee4c3bbb88f489ea0fd350f1461",
+    "semantic_hash": ""
+  },
+  "Program/encoding_test.go": {
+    "mtime": 1789741395.4651408,
+    "seen": 1790085786.060537,
+    "ast_hash": "095f0281684056505d5bd02ceeba435c",
+    "semantic_hash": ""
+  },
+  "Program/overrides_test.go": {
+    "mtime": 1789745842.2785914,
+    "seen": 1790085786.0605419,
+    "ast_hash": "bc4ef5bb621c4665a2f7a0e9142b44fd",
     "semantic_hash": ""
   }
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
 	"flag"
@@ -27,13 +28,14 @@ type StubConfig struct {
 
 // HTTPStub represents a single HTTP stub endpoint
 type HTTPStub struct {
-	Name         string                 `yaml:"name" json:"name"`
-	Method       string                 `yaml:"method" json:"method"`
-	Path         string                 `yaml:"path" json:"path"`
-	Headers      map[string]string      `yaml:"headers,omitempty" json:"headers,omitempty"`
-	BodyContains string                 `yaml:"body_contains,omitempty" json:"body_contains,omitempty"` // Match if body contains this string
-	BodyJSON     map[string]interface{} `yaml:"body_json,omitempty" json:"body_json,omitempty"`         // Match specific JSON fields
-	Response     HTTPResponse           `yaml:"response" json:"response"`
+	Name          string                 `yaml:"name" json:"name"`
+	Method        string                 `yaml:"method" json:"method"`
+	Path          string                 `yaml:"path" json:"path"`
+	Headers       map[string]string      `yaml:"headers,omitempty" json:"headers,omitempty"`
+	BodyContains  string                 `yaml:"body_contains,omitempty" json:"body_contains,omitempty"`   // Match if body contains this string
+	BodyJSON      map[string]interface{} `yaml:"body_json,omitempty" json:"body_json,omitempty"`           // Match specific JSON fields
+	RequireFields []string               `yaml:"require_fields,omitempty" json:"require_fields,omitempty"` // Match only if these dotted JSON paths are present, any value
+	Response      HTTPResponse           `yaml:"response" json:"response"`
 }
 
 // HTTPResponse defines the HTTP stub response
@@ -46,27 +48,19 @@ type HTTPResponse struct {
 
 // TCPStub represents a TCP stub configuration
 type TCPStub struct {
-	Name               string               `yaml:"name" json:"name"`
-	Port               int                  `yaml:"port" json:"port"`
-	ResponseMessage    string               `yaml:"response_message" json:"response_message"`
-	ResponseHex        string               `yaml:"response_hex,omitempty" json:"response_hex,omitempty"` // Hex encoded response
-	CloseAfter         bool                 `yaml:"close_after" json:"close_after"`
-	Delay              int                  `yaml:"delay,omitempty" json:"delay,omitempty"`
-	ValidateRequest    bool                 `yaml:"validate_request" json:"validate_request"`
-	ExpectedHexPattern string               `yaml:"expected_hex_pattern,omitempty" json:"expected_hex_pattern,omitempty"` // Regex pattern for hex
-	ExpectedPrefix     string               `yaml:"expected_prefix,omitempty" json:"expected_prefix,omitempty"`           // Expected hex prefix
-	MinLength          int                  `yaml:"min_length,omitempty" json:"min_length,omitempty"`
-	MaxLength          int                  `yaml:"max_length,omitempty" json:"max_length,omitempty"`
-	ErrorResponse      string               `yaml:"error_response,omitempty" json:"error_response,omitempty"` // Response on validation failure
-	ErrorResponseHex   string               `yaml:"error_response_hex,omitempty" json:"error_response_hex,omitempty"`
-	CopyFields         []FieldCopy          `yaml:"copy_fields,omitempty" json:"copy_fields,omitempty"`     // Splice bytes from the request into the response before sending
-	RandomFields       []RandomField        `yaml:"random_fields,omitempty" json:"random_fields,omitempty"` // Randomize non-echoed digit fields before sending
-	Fields             []TCPResponseField   `yaml:"fields,omitempty" json:"fields,omitempty"`               // Build the response from field specs instead of a captured template — see TCPResponseField
-	Length             int                  `yaml:"length,omitempty" json:"length,omitempty"`               // Total response byte length; required when Fields is set
-	Responses          []TCPResponseVariant `yaml:"responses,omitempty" json:"responses,omitempty"`         // Multiple possible outcomes (e.g. approved/declined), chosen at random per message
-	Match              *TCPMatch            `yaml:"match,omitempty" json:"match,omitempty"`                 // Selects this stub among others sharing the same Port — see TCPMatch
-	Label              string               `yaml:"label,omitempty" json:"label,omitempty"`                 // Human-readable message name for logs, e.g. "Plan 86 (Tiempo Aire)"; Name stays the stable key
-	Meta               *TCPMeta             `yaml:"meta,omitempty" json:"meta,omitempty"`                   // Portal-only display info; the server ignores it
+	Name            string               `yaml:"name" json:"name"`
+	Port            int                  `yaml:"port" json:"port"`
+	CloseAfter      bool                 `yaml:"close_after" json:"close_after"`
+	Delay           int                  `yaml:"delay,omitempty" json:"delay,omitempty"`
+	ValidateRequest bool                 `yaml:"validate_request" json:"validate_request"`
+	MinLength       int                  `yaml:"min_length,omitempty" json:"min_length,omitempty"`
+	MaxLength       int                  `yaml:"max_length,omitempty" json:"max_length,omitempty"`
+	Fields          []TCPResponseField   `yaml:"fields,omitempty" json:"fields,omitempty"`       // Build the response from field specs — see TCPResponseField
+	Length          int                  `yaml:"length,omitempty" json:"length,omitempty"`       // Total response byte length; required when Fields is set
+	Responses       []TCPResponseVariant `yaml:"responses,omitempty" json:"responses,omitempty"` // Multiple possible outcomes (e.g. approved/declined), chosen at random per message
+	Match           *TCPMatch            `yaml:"match,omitempty" json:"match,omitempty"`         // Selects this stub among others sharing the same Port — see TCPMatch
+	Label           string               `yaml:"label,omitempty" json:"label,omitempty"`         // Human-readable message name for logs, e.g. "Plan 86 (Tiempo Aire)"; Name stays the stable key
+	Meta            *TCPMeta             `yaml:"meta,omitempty" json:"meta,omitempty"`           // Portal-only display info; the server ignores it
 }
 
 // TCPMeta is display info for the portal's message list (served raw via the sim agent's
@@ -90,52 +84,22 @@ type TCPMatch struct {
 	Value  string `yaml:"value" json:"value"` // hex-encoded expected byte(s) at Offset
 }
 
-// FieldCopy copies a fixed-length byte range from the raw request into the raw response,
-// so a canned response_hex can reflect fields (e.g. an MSISDN) that vary per request
-// instead of always sending back the same recorded sample. Offsets are byte indexes into
-// the exact bytes received/sent on the wire (including any length-prefix bytes).
-type FieldCopy struct {
-	Name           string `yaml:"name,omitempty" json:"name,omitempty"`
-	RequestOffset  int    `yaml:"request_offset" json:"request_offset"`
-	ResponseOffset int    `yaml:"response_offset" json:"response_offset"`
-	Length         int    `yaml:"length" json:"length"`
-}
-
-// RandomField overwrites a fixed-length byte range in the response before it's sent, so
-// fields that aren't tied to the request (auth codes, trace numbers) don't come back as
-// the exact same recorded value on every single response. With Values set, one entry is
-// picked uniformly at random (for fields like a Base24 approval/decline code, where only
-// specific values are meaningful); otherwise Length random ASCII digits are generated.
-type RandomField struct {
-	Name           string   `yaml:"name,omitempty" json:"name,omitempty"`
-	ResponseOffset int      `yaml:"response_offset" json:"response_offset"`
-	Length         int      `yaml:"length" json:"length"`
-	Values         []string `yaml:"values,omitempty" json:"values,omitempty"`
-}
-
 // TCPResponseVariant is one possible outcome for a TCP stub (e.g. an approved vs a
 // declined reply). When a stub declares more than one, one is picked at random
 // (weighted by Weight, default 1) for every message it responds to.
 type TCPResponseVariant struct {
-	Name            string             `yaml:"name" json:"name"`
-	Weight          int                `yaml:"weight,omitempty" json:"weight,omitempty"`
-	ResponseMessage string             `yaml:"response_message,omitempty" json:"response_message,omitempty"`
-	ResponseHex     string             `yaml:"response_hex,omitempty" json:"response_hex,omitempty"`
-	CopyFields      []FieldCopy        `yaml:"copy_fields,omitempty" json:"copy_fields,omitempty"`
-	RandomFields    []RandomField      `yaml:"random_fields,omitempty" json:"random_fields,omitempty"`
-	Fields          []TCPResponseField `yaml:"fields,omitempty" json:"fields,omitempty"` // Build this variant's response from field specs — see TCPResponseField
-	Length          int                `yaml:"length,omitempty" json:"length,omitempty"` // Total response byte length; required when Fields is set
+	Name   string             `yaml:"name" json:"name"`
+	Weight int                `yaml:"weight,omitempty" json:"weight,omitempty"`
+	Fields []TCPResponseField `yaml:"fields" json:"fields"` // Build this variant's response from field specs — see TCPResponseField
+	Length int                `yaml:"length" json:"length"` // Total response byte length
 }
 
-// TCPResponseField declaratively builds one byte range of a response — no starting
-// captured hex template required. When a stub or variant sets Fields (and Length, the
-// total response size), the response is assembled from scratch: allocate Length zero
-// bytes, then write each field's value at [Offset:Offset+Length] in order. Fields can
-// overlap and later entries win, so one big Source:"fixed" field spanning the whole
-// message (equivalent to today's ResponseHex) plus a few small Source:"request"/
-// "random" overlays reproduces exactly what CopyFields/RandomFields already do — the
-// new mechanism is a superset, not a parallel one. Genuinely new message types can skip
-// the base template entirely and declare every field independently instead.
+// TCPResponseField declaratively builds one byte range of a response: every TCP stub
+// response is assembled from scratch — allocate Length zero bytes (Length is set on the
+// stub or variant), then write each field's value at [Offset:Offset+Length] in order.
+// Fields can overlap; later entries win, which is how a captured proprietary blob (one
+// big Source:"fixed" field) can sit underneath a few small Source:"request"/"random"
+// overlays for the parts that vary per message.
 type TCPResponseField struct {
 	Name   string `yaml:"name,omitempty" json:"name,omitempty"`
 	Offset int    `yaml:"offset" json:"offset"`
@@ -149,6 +113,12 @@ type TCPResponseField struct {
 	Value         string   `yaml:"value,omitempty" json:"value,omitempty"`
 	RequestOffset int      `yaml:"request_offset,omitempty" json:"request_offset,omitempty"`
 	Values        []string `yaml:"values,omitempty" json:"values,omitempty"`
+	// Echo is shorthand for the common case of source:"request" with RequestOffset ==
+	// Offset (the request and response share a wire layout there) — most real protocol
+	// envelopes are byte-for-byte echoes at the same position, e.g. BASE24/SPDH fields the
+	// dictionary itself calls out as "echoed". Set true instead of repeating the offset
+	// twice; a field with a genuinely different RequestOffset still uses Source directly.
+	Echo bool `yaml:"echo,omitempty" json:"echo,omitempty"`
 }
 
 // HTTPStubServer manages HTTP stub endpoints
@@ -188,34 +158,33 @@ func (s *HTTPStubServer) matchRequest(r *http.Request, stub HTTPStub) bool {
 	}
 
 	// Match body if specified
-	if stub.BodyContains != "" || len(stub.BodyJSON) > 0 {
-		// Read body
-		bodyBytes, err := io.ReadAll(r.Body)
-		if err != nil {
+	if stub.BodyContains == "" && len(stub.BodyJSON) == 0 && len(stub.RequireFields) == 0 {
+		return true
+	}
+
+	bodyBytes, err := io.ReadAll(r.Body)
+	if err != nil {
+		return false
+	}
+	r.Body = io.NopCloser(bytes.NewReader(bodyBytes)) // restore for the handler
+
+	if stub.BodyContains != "" && !bytes.Contains(bodyBytes, []byte(stub.BodyContains)) {
+		return false
+	}
+
+	if len(stub.BodyJSON) > 0 || len(stub.RequireFields) > 0 {
+		var requestJSON map[string]interface{}
+		if err := json.Unmarshal(bodyBytes, &requestJSON); err != nil {
 			return false
 		}
-		// Restore body for later reads
-		r.Body = io.NopCloser(strings.NewReader(string(bodyBytes)))
-
-		bodyStr := string(bodyBytes)
-
-		// Check if body contains string
-		if stub.BodyContains != "" && !strings.Contains(bodyStr, stub.BodyContains) {
-			return false
-		}
-
-		// Check JSON fields match
-		if len(stub.BodyJSON) > 0 {
-			var requestJSON map[string]interface{}
-			if err := json.Unmarshal(bodyBytes, &requestJSON); err != nil {
+		for key, expectedValue := range stub.BodyJSON {
+			if !jsonFieldMatches(requestJSON, key, expectedValue) {
 				return false
 			}
-
-			// Check if all specified fields match
-			for key, expectedValue := range stub.BodyJSON {
-				if !jsonFieldMatches(requestJSON, key, expectedValue) {
-					return false
-				}
+		}
+		for _, path := range stub.RequireFields {
+			if _, ok := jsonFieldAt(requestJSON, path); !ok {
+				return false
 			}
 		}
 	}
@@ -223,21 +192,29 @@ func (s *HTTPStubServer) matchRequest(r *http.Request, stub HTTPStub) bool {
 	return true
 }
 
-// jsonFieldMatches checks if a JSON field matches expected value (supports nested paths with dots)
-func jsonFieldMatches(data map[string]interface{}, path string, expectedValue interface{}) bool {
-	keys := strings.Split(path, ".")
-
+// jsonFieldAt walks a dotted path (e.g. "hdr.remitente.centro") into a decoded JSON
+// object and returns the value found there, or ok=false if any segment is missing —
+// the shared primitive behind both exact-value (jsonFieldMatches) and presence-only
+// (require_fields) matching.
+func jsonFieldAt(data map[string]interface{}, path string) (interface{}, bool) {
 	var current interface{} = data
-	for _, key := range keys {
-		if m, ok := current.(map[string]interface{}); ok {
-			current = m[key]
-		} else {
-			return false
+	for _, key := range strings.Split(path, ".") {
+		m, ok := current.(map[string]interface{})
+		if !ok {
+			return nil, false
+		}
+		current, ok = m[key]
+		if !ok {
+			return nil, false
 		}
 	}
+	return current, true
+}
 
-	// Compare values
-	return fmt.Sprintf("%v", current) == fmt.Sprintf("%v", expectedValue)
+// jsonFieldMatches checks if a JSON field matches expected value (supports nested paths with dots)
+func jsonFieldMatches(data map[string]interface{}, path string, expectedValue interface{}) bool {
+	current, ok := jsonFieldAt(data, path)
+	return ok && fmt.Sprintf("%v", current) == fmt.Sprintf("%v", expectedValue)
 }
 
 // ServeHTTP handles incoming HTTP requests
@@ -383,75 +360,7 @@ func (s *TCPStubServer) validateRequest(data []byte, stub *TCPStub) (bool, strin
 	return true, "OK"
 }
 
-// applyFieldCopies splices byte ranges from the received request into the response,
-// in place, so the response reflects request-specific values instead of always being
-// the same recorded sample. Out-of-bounds fields are skipped and logged rather than
-// causing a panic or corrupting the response.
-func applyFieldCopies(stubName string, fields []FieldCopy, data []byte, responseData []byte) {
-	for _, fc := range fields {
-		if fc.Length <= 0 {
-			continue
-		}
-		if fc.RequestOffset < 0 || fc.RequestOffset+fc.Length > len(data) {
-			log.Printf("[TCP:%s] Skipping copy_field %q: request_offset %d + length %d exceeds received %d bytes",
-				stubName, fc.Name, fc.RequestOffset, fc.Length, len(data))
-			continue
-		}
-		if fc.ResponseOffset < 0 || fc.ResponseOffset+fc.Length > len(responseData) {
-			log.Printf("[TCP:%s] Skipping copy_field %q: response_offset %d + length %d exceeds response %d bytes",
-				stubName, fc.Name, fc.ResponseOffset, fc.Length, len(responseData))
-			continue
-		}
-		copy(responseData[fc.ResponseOffset:fc.ResponseOffset+fc.Length], data[fc.RequestOffset:fc.RequestOffset+fc.Length])
-		log.Printf("[TCP:%s] Copied field %q (%d bytes) from request[%d:%d] into response[%d:%d]: %s",
-			stubName, fc.Name, fc.Length, fc.RequestOffset, fc.RequestOffset+fc.Length, fc.ResponseOffset, fc.ResponseOffset+fc.Length,
-			hex.EncodeToString(responseData[fc.ResponseOffset:fc.ResponseOffset+fc.Length]))
-	}
-}
-
 const randomFieldDigits = "0123456789"
-
-// applyRandomFields overwrites byte ranges in the response, in place, so fields that
-// aren't tied to the request (auth codes, trace numbers, Base24 approval/decline codes)
-// vary from response to response instead of always being the exact same recorded value.
-// A field with Values set picks one of those values at random (only entries matching
-// Length are eligible); otherwise it fills with fresh random ASCII digits. Out-of-bounds
-// or unusable fields are skipped and logged rather than corrupting the response.
-func applyRandomFields(stubName string, fields []RandomField, responseData []byte) {
-	for _, rf := range fields {
-		if rf.Length <= 0 {
-			continue
-		}
-		if rf.ResponseOffset < 0 || rf.ResponseOffset+rf.Length > len(responseData) {
-			log.Printf("[TCP:%s] Skipping random_field %q: response_offset %d + length %d exceeds response %d bytes",
-				stubName, rf.Name, rf.ResponseOffset, rf.Length, len(responseData))
-			continue
-		}
-		if len(rf.Values) > 0 {
-			var candidates []string
-			for _, v := range rf.Values {
-				if len(v) == rf.Length {
-					candidates = append(candidates, v)
-				} else {
-					log.Printf("[TCP:%s] Ignoring random_field %q value %q: length %d != declared length %d",
-						stubName, rf.Name, v, len(v), rf.Length)
-				}
-			}
-			if len(candidates) == 0 {
-				log.Printf("[TCP:%s] Skipping random_field %q: no values matching length %d", stubName, rf.Name, rf.Length)
-				continue
-			}
-			copy(responseData[rf.ResponseOffset:rf.ResponseOffset+rf.Length], candidates[rand.Intn(len(candidates))])
-		} else {
-			for i := 0; i < rf.Length; i++ {
-				responseData[rf.ResponseOffset+i] = randomFieldDigits[rand.Intn(len(randomFieldDigits))]
-			}
-		}
-		log.Printf("[TCP:%s] Randomized field %q (%d bytes) at response[%d:%d]: %s",
-			stubName, rf.Name, rf.Length, rf.ResponseOffset, rf.ResponseOffset+rf.Length,
-			string(responseData[rf.ResponseOffset:rf.ResponseOffset+rf.Length]))
-	}
-}
 
 // asciiToEBCDIC maps the ASCII characters SPDH-style fields actually use (space, digits,
 // uppercase letters) to their EBCDIC (cp500) code points. Anything else is an error rather
@@ -525,10 +434,12 @@ func orDefault(s, def string) string {
 // bytes at [Offset:Offset+Length] in order, so later fields win on any overlap — that's
 // what lets one big fixed field stand in for a whole captured template while a few
 // small request/random fields overlay the parts that vary per message. Invalid fields
-// are skipped and logged rather than aborting the response, same policy as
-// applyFieldCopies/applyRandomFields.
+// are skipped and logged rather than aborting the response.
 func buildFields(stubName string, fields []TCPResponseField, request []byte, response []byte) {
 	for _, f := range fields {
+		if f.Echo {
+			f.Source, f.RequestOffset = "request", f.Offset
+		}
 		if f.Length <= 0 {
 			log.Printf("[TCP:%s] Skipping field %q: length must be > 0", stubName, f.Name)
 			continue
@@ -572,10 +483,17 @@ func buildFields(stubName string, fields []TCPResponseField, request []byte, res
 				}
 				raw = candidates[rand.Intn(len(candidates))]
 			} else {
-				raw = make([]byte, f.Length)
-				for i := range raw {
-					raw[i] = randomFieldDigits[rand.Intn(len(randomFieldDigits))]
+				digits := make([]byte, f.Length)
+				for i := range digits {
+					digits[i] = randomFieldDigits[rand.Intn(len(randomFieldDigits))]
 				}
+				encoded, err := encodeFieldValue(string(digits), f.Encoding, f.Length)
+				if err != nil {
+					log.Printf("[TCP:%s] Skipping field %q: generated digits %q don't fit encoding %q: %v",
+						stubName, f.Name, digits, orDefault(f.Encoding, "ascii"), err)
+					continue
+				}
+				raw = encoded
 			}
 		default:
 			log.Printf("[TCP:%s] Skipping field %q: unknown source %q (use \"fixed\", \"request\" or \"random\")", stubName, f.Name, f.Source)
@@ -619,55 +537,31 @@ func pickResponseVariant(stub *TCPStub) *TCPResponseVariant {
 }
 
 // buildResponse produces the bytes to send back for one received message: it picks a
-// response variant (if the stub declares more than one outcome), then either builds the
-// response from Fields (see TCPResponseField — the "on the fly" path, no captured
-// template needed) or falls back to the original template + copy_fields + random_fields
-// splicing. Returns the response bytes and the name of whichever variant/stub was used,
-// for logging.
+// response variant (if the stub declares more than one outcome) and builds the response
+// from Fields (see TCPResponseField) — every TCP stub is built this way, there's no
+// captured-template fallback. Returns the response bytes and the name of whichever
+// variant/stub was used, for logging.
 func buildResponse(stub *TCPStub, data []byte) ([]byte, string, error) {
 	variant := pickResponseVariant(stub)
 
-	responseHex := stub.ResponseHex
-	responseMessage := stub.ResponseMessage
-	copyFields := stub.CopyFields
-	randomFields := stub.RandomFields
 	fields := stub.Fields
 	length := stub.Length
 	name := stub.Name
 
 	if variant != nil {
-		responseHex = variant.ResponseHex
-		responseMessage = variant.ResponseMessage
-		copyFields = variant.CopyFields
-		randomFields = variant.RandomFields
 		fields = variant.Fields
 		length = variant.Length
 		name = fmt.Sprintf("%s/%s", stub.Name, variant.Name)
 	}
 
-	if len(fields) > 0 {
-		if length <= 0 {
-			return nil, name, fmt.Errorf("fields declared but length is not set (or <= 0)")
-		}
-		responseData := make([]byte, length)
-		buildFields(name, fields, data, responseData)
-		return responseData, name, nil
+	if len(fields) == 0 {
+		return nil, name, fmt.Errorf("no fields declared - every TCP stub/variant must declare fields and length")
 	}
-
-	var responseData []byte
-	var err error
-	if responseHex != "" {
-		responseData, err = hex.DecodeString(responseHex)
-		if err != nil {
-			return nil, name, fmt.Errorf("decoding response hex: %w", err)
-		}
-	} else {
-		responseData = []byte(responseMessage)
+	if length <= 0 {
+		return nil, name, fmt.Errorf("fields declared but length is not set (or <= 0)")
 	}
-
-	applyFieldCopies(stub.Name, copyFields, data, responseData)
-	applyRandomFields(stub.Name, randomFields, responseData)
-
+	responseData := make([]byte, length)
+	buildFields(name, fields, data, responseData)
 	return responseData, name, nil
 }
 
@@ -675,6 +569,12 @@ func buildResponse(stub *TCPStub, data []byte) ([]byte, string, error) {
 // registered on this port; which one applies is decided per message (not once for the
 // whole connection), since a real multiplexed connection can carry a different message
 // type on every exchange.
+//
+// Every message on the wire opens with a 2-byte big-endian length prefix giving the byte
+// count that follows (the "frame_prefix" field in STUBS.yaml, e.g. wire[0:1]) - reads pull
+// exactly one frame via the prefix rather than a single Read() into a fixed buffer, since
+// the OS is free to deliver one client write as more than one Read(), which previously
+// made handleConnection treat a partial message as the whole thing and close early.
 func (s *TCPStubServer) handleConnection(conn net.Conn, port int, stubs []*TCPStub) {
 	defer conn.Close()
 
@@ -682,15 +582,18 @@ func (s *TCPStubServer) handleConnection(conn net.Conn, port int, stubs []*TCPSt
 	log.Printf("[TCP:%d %s] Connection from %s", port, time.Now().Format("15:04:05"), clientAddr)
 
 	reader := bufio.NewReader(conn)
-	buffer := make([]byte, 4096)
 
 	for {
-		n, err := reader.Read(buffer)
-		if err != nil {
+		header := make([]byte, 2)
+		if _, err := io.ReadFull(reader, header); err != nil {
 			return
 		}
-		data := buffer[:n]
-		log.Printf("[TCP:%d] Received %d bytes: %s", port, n, hex.EncodeToString(data))
+		payload := make([]byte, binary.BigEndian.Uint16(header))
+		if _, err := io.ReadFull(reader, payload); err != nil {
+			return
+		}
+		data := append(header, payload...)
+		log.Printf("[TCP:%d] Received %d bytes: %s", port, len(data), hex.EncodeToString(data))
 
 		stub := matchStub(stubs, data)
 		if stub == nil {

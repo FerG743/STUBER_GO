@@ -1,0 +1,68 @@
+{
+  "Program/go.mod": {
+    "mtime": 1762266548.5660014,
+    "seen": 1789653809.235818,
+    "ast_hash": "b82ce4a79ddfcb51963d50a2d408c789",
+    "semantic_hash": ""
+  },
+  "Program/main.go": {
+    "mtime": 1789442260.3758595,
+    "seen": 1789653809.235821,
+    "ast_hash": "69c6bdcfea3c330862ba5a331d44f0b0",
+    "semantic_hash": ""
+  },
+  "Program/wsbridge/main.go": {
+    "mtime": 1762277833.5202992,
+    "seen": 1789653809.235822,
+    "ast_hash": "3f32e7265f7b6cf53c531906f95b60f8",
+    "semantic_hash": ""
+  },
+  "agent/sim_agent.py": {
+    "mtime": 1789441414.8484375,
+    "seen": 1789653809.2358232,
+    "ast_hash": "1529fc2979c963741568f32c62083769",
+    "semantic_hash": ""
+  },
+  "Architecture.md": {
+    "mtime": 1761931989.4202168,
+    "seen": 1789653809.235824,
+    "ast_hash": "1713680fdc882fb7f55efb67201fb052",
+    "semantic_hash": ""
+  },
+  "Big_Archtecture.md": {
+    "mtime": 1769012354.7318096,
+    "seen": 1789653809.235824,
+    "ast_hash": "8038db460d73a85cbda250c7f710a563",
+    "semantic_hash": ""
+  },
+  "Components.md": {
+    "mtime": 1761931989.4203331,
+    "seen": 1789653809.2358248,
+    "ast_hash": "0d5291903d5166727bcb1f7f897f69af",
+    "semantic_hash": ""
+  },
+  "Dataflow.md": {
+    "mtime": 1761931989.4204237,
+    "seen": 1789653809.2358248,
+    "ast_hash": "ba0131f4d4bddb3247a17d7ec5cd2efa",
+    "semantic_hash": ""
+  },
+  "Program/STUBS.yaml": {
+    "mtime": 1788185808.1342301,
+    "seen": 1789653809.235826,
+    "ast_hash": "6688d6fb65d3c45ebbbecafb6f81730f",
+    "semantic_hash": ""
+  },
+  "Program/STUBS_OSCHEMA.yaml": {
+    "mtime": 1762448166.3033037,
+    "seen": 1789653809.235826,
+    "ast_hash": "6ca5a7a3bee74cab8678297ea33d1394",
+    "semantic_hash": ""
+  },
+  "README.md": {
+    "mtime": 1761931989.42052,
+    "seen": 1789653809.235827,
+    "ast_hash": "2bcd1ee4c3bbb88f489ea0fd350f1461",
+    "semantic_hash": ""
+  }
+}

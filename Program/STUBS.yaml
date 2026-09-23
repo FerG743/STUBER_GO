@@ -175,34 +175,35 @@ tcp_stubs:
           # dictionary - the rest of the envelope (store/terminal/message-type/txn-code)
           # follows the same logic: a real switch reflects what the terminal sent rather
           # than inventing its own, so all of these are source:request, not canned values.
-          - {name: version_vtol, source: request, request_offset: 2, offset: 2, length: 2}
-          - {name: formato_negocio, source: request, request_offset: 4, offset: 4, length: 2}
-          - {name: numero_tienda, source: request, request_offset: 6, offset: 6, length: 4}
-          - {name: reservado_tienda, source: request, request_offset: 10, offset: 10, length: 1} # F003.02 - "Campo sin uso"
-          - {name: filler_1, source: request, request_offset: 11, offset: 11, length: 2}
-          - {name: id_terminal, source: request, request_offset: 13, offset: 13, length: 2}
-          - {name: tipo_mensaje, source: request, request_offset: 15, offset: 15, length: 1}
-          - {name: reservado_boleta, source: request, request_offset: 16, offset: 16, length: 1} # F007.01 - "Campo sin uso"
-          - {name: id_boleta, source: request, request_offset: 17, offset: 17, length: 2} # F007.02 - spec: BASE24 echoes this
-          - {name: consecutivo_mensaje, source: request, request_offset: 19, offset: 19, length: 2} # F008 - spec: BASE24 echoes this
-          - {name: codigo_transaccion, source: request, request_offset: 21, offset: 21, length: 1} # F009
+          - {name: version_vtol, echo: true, offset: 2, length: 2}
+          - {name: formato_negocio, echo: true, offset: 4, length: 2}
+          - {name: numero_tienda, echo: true, offset: 6, length: 4}
+          - {name: reservado_tienda, echo: true, offset: 10, length: 1} # F003.02 - "Campo sin uso"
+          - {name: filler_1, echo: true, offset: 11, length: 2}
+          - {name: id_terminal, echo: true, offset: 13, length: 2}
+          - {name: tipo_mensaje, echo: true, offset: 15, length: 1}
+          - {name: reservado_boleta, echo: true, offset: 16, length: 1} # F007.01 - "Campo sin uso"
+          - {name: id_boleta, echo: true, offset: 17, length: 2} # F007.02 - spec: BASE24 echoes this
+          - {name: consecutivo_mensaje, echo: true, offset: 19, length: 2} # F008 - spec: BASE24 echoes this
+          - {name: codigo_transaccion, echo: true, offset: 21, length: 1} # F009
           # F010 is genuinely different between the two tables (request: fixed Indicador_Estatus
           # "00"; response: Codigo_Respuesta, the stub-controlled result) - not an echo.
           - {name: codigo_respuesta, offset: 22, length: 1, encoding: bcd, value: "01"} # F010 - "01" Aprobado
           # F011 Monto: the dictionary lists the response's own value as fixed "Ceros", but
           # reflecting the request's actual amount is more useful for testing than a canned
           # constant - echo it instead.
-          - {name: monto, source: request, request_offset: 23, offset: 23, length: 4}
+          - {name: monto, echo: true, offset: 23, length: 4}
           # F012 Referencia_ACC: same offset as the request's, but a DIFFERENT field by
           # meaning and physical type - request's is the phone number (BCD), response's is
           # "Número de orden dada de alta" (ASCII), a value the response system itself
-          # generates. Not an echo target - stays canned.
-          - {name: referencia_acc, offset: 27, length: 12, encoding: ascii, value: "000000094585"}
+          # generates per transaction - not an echo target, but not a fixed constant either,
+          # so it's randomized fresh for every response instead of a hardcoded sample.
+          - {name: referencia_acc, source: random, offset: 27, length: 12} # system-generated order number, not a protocol constant - see note above
           - {name: indicadores_2, offset: 39, length: 2, encoding: ebcdic, value: "11"} # F013 - fixed value
           - {name: longitud_info_gral_texto, offset: 41, length: 1, encoding: bcd, value: "38"} # F014 - fixed value
           - {name: codigo_respuesta_2, offset: 42, length: 2, encoding: ebcdic, value: "00"} # F015.01
           - {name: separador, offset: 44, length: 1, encoding: ebcdic, value: " "} # F015.02 - " " or "@"
-          - {name: codigo_autorizacion, offset: 45, length: 8, encoding: ebcdic, value: "00162352"} # F015.03
+          - {name: codigo_autorizacion, source: random, offset: 45, length: 8, encoding: ebcdic} # F015.03 - system-generated per transaction, randomized
           - name: descripcion_respuesta # F015.04 - last sub-field of Info_Gral_Texto above
             offset: 53
             length: 27
@@ -263,25 +264,25 @@ tcp_stubs:
             length: 2
             encoding: hex
             value: "0105"
-          - {name: version_vtol, source: request, request_offset: 2, offset: 2, length: 2}
-          - {name: formato_negocio, source: request, request_offset: 4, offset: 4, length: 2}
-          - {name: numero_tienda, source: request, request_offset: 6, offset: 6, length: 4}
-          - {name: reservado_tienda, source: request, request_offset: 10, offset: 10, length: 1}
-          - {name: filler_1, source: request, request_offset: 11, offset: 11, length: 2}
-          - {name: id_terminal, source: request, request_offset: 13, offset: 13, length: 2}
-          - {name: tipo_mensaje, source: request, request_offset: 15, offset: 15, length: 1}
-          - {name: reservado_boleta, source: request, request_offset: 16, offset: 16, length: 1}
-          - {name: id_boleta, source: request, request_offset: 17, offset: 17, length: 2}
-          - {name: consecutivo_mensaje, source: request, request_offset: 19, offset: 19, length: 2}
-          - {name: codigo_transaccion, source: request, request_offset: 21, offset: 21, length: 1}
+          - {name: version_vtol, echo: true, offset: 2, length: 2}
+          - {name: formato_negocio, echo: true, offset: 4, length: 2}
+          - {name: numero_tienda, echo: true, offset: 6, length: 4}
+          - {name: reservado_tienda, echo: true, offset: 10, length: 1}
+          - {name: filler_1, echo: true, offset: 11, length: 2}
+          - {name: id_terminal, echo: true, offset: 13, length: 2}
+          - {name: tipo_mensaje, echo: true, offset: 15, length: 1}
+          - {name: reservado_boleta, echo: true, offset: 16, length: 1}
+          - {name: id_boleta, echo: true, offset: 17, length: 2}
+          - {name: consecutivo_mensaje, echo: true, offset: 19, length: 2}
+          - {name: codigo_transaccion, echo: true, offset: 21, length: 1}
           - {name: codigo_respuesta, offset: 22, length: 1, encoding: bcd, value: "02"} # F010 - "02" Declinado, not an echo
-          - {name: monto, source: request, request_offset: 23, offset: 23, length: 4}
-          - {name: referencia_acc, offset: 27, length: 12, encoding: ascii, value: "000000094585"}
+          - {name: monto, echo: true, offset: 23, length: 4}
+          - {name: referencia_acc, source: random, offset: 27, length: 12} # system-generated order number, not a protocol constant - see note above
           - {name: indicadores_2, offset: 39, length: 2, encoding: ebcdic, value: "11"}
           - {name: longitud_info_gral_texto, offset: 41, length: 1, encoding: bcd, value: "38"}
           - {name: codigo_respuesta_2, offset: 42, length: 2, encoding: ebcdic, value: "00"}
           - {name: separador, offset: 44, length: 1, encoding: ebcdic, value: " "}
-          - {name: codigo_autorizacion, offset: 45, length: 8, encoding: ebcdic, value: "00162352"}
+          - {name: codigo_autorizacion, source: random, offset: 45, length: 8, encoding: ebcdic} # system-generated per transaction, randomized
           - name: descripcion_respuesta
             offset: 53
             length: 27
@@ -344,34 +345,35 @@ tcp_stubs:
           # dictionary - the rest of the envelope (store/terminal/message-type/txn-code)
           # follows the same logic: a real switch reflects what the terminal sent rather
           # than inventing its own, so all of these are source:request, not canned values.
-          - {name: version_vtol, source: request, request_offset: 2, offset: 2, length: 2}
-          - {name: formato_negocio, source: request, request_offset: 4, offset: 4, length: 2}
-          - {name: numero_tienda, source: request, request_offset: 6, offset: 6, length: 4}
-          - {name: reservado_tienda, source: request, request_offset: 10, offset: 10, length: 1} # F003.02 - "Campo sin uso"
-          - {name: filler_1, source: request, request_offset: 11, offset: 11, length: 2}
-          - {name: id_terminal, source: request, request_offset: 13, offset: 13, length: 2}
-          - {name: tipo_mensaje, source: request, request_offset: 15, offset: 15, length: 1}
-          - {name: reservado_boleta, source: request, request_offset: 16, offset: 16, length: 1} # F007.01 - "Campo sin uso"
-          - {name: id_boleta, source: request, request_offset: 17, offset: 17, length: 2} # F007.02 - spec: BASE24 echoes this
-          - {name: consecutivo_mensaje, source: request, request_offset: 19, offset: 19, length: 2} # F008 - spec: BASE24 echoes this
-          - {name: codigo_transaccion, source: request, request_offset: 21, offset: 21, length: 1} # F009
+          - {name: version_vtol, echo: true, offset: 2, length: 2}
+          - {name: formato_negocio, echo: true, offset: 4, length: 2}
+          - {name: numero_tienda, echo: true, offset: 6, length: 4}
+          - {name: reservado_tienda, echo: true, offset: 10, length: 1} # F003.02 - "Campo sin uso"
+          - {name: filler_1, echo: true, offset: 11, length: 2}
+          - {name: id_terminal, echo: true, offset: 13, length: 2}
+          - {name: tipo_mensaje, echo: true, offset: 15, length: 1}
+          - {name: reservado_boleta, echo: true, offset: 16, length: 1} # F007.01 - "Campo sin uso"
+          - {name: id_boleta, echo: true, offset: 17, length: 2} # F007.02 - spec: BASE24 echoes this
+          - {name: consecutivo_mensaje, echo: true, offset: 19, length: 2} # F008 - spec: BASE24 echoes this
+          - {name: codigo_transaccion, echo: true, offset: 21, length: 1} # F009
           # F010 is genuinely different between the two tables (request: fixed Indicador_Estatus
           # "00"; response: Codigo_Respuesta, the stub-controlled result) - not an echo.
           - {name: codigo_respuesta, offset: 22, length: 1, encoding: bcd, value: "04"} # F010 - "04" Emision Vale Impreso
           # F011 Monto: the dictionary lists the response's own value as fixed "Ceros", but
           # reflecting the request's actual amount is more useful for testing than a canned
           # constant - echo it instead.
-          - {name: monto, source: request, request_offset: 23, offset: 23, length: 4}
+          - {name: monto, echo: true, offset: 23, length: 4}
           # F012 Referencia_ACC: same offset as the request's, but a DIFFERENT field by
           # meaning and physical type - request's is the phone number (BCD), response's is
           # "Número de orden dada de alta" (ASCII), a value the response system itself
-          # generates. Not an echo target - stays canned.
-          - {name: referencia_acc, offset: 27, length: 12, encoding: ascii, value: "000000094585"}
+          # generates per transaction - not an echo target, but not a fixed constant either,
+          # so it's randomized fresh for every response instead of a hardcoded sample.
+          - {name: referencia_acc, source: random, offset: 27, length: 12} # system-generated order number, not a protocol constant - see note above
           - {name: indicadores_2, offset: 39, length: 2, encoding: ebcdic, value: "11"} # F013 - fixed value
           - {name: longitud_info_gral_texto, offset: 41, length: 1, encoding: bcd, value: "38"} # F014 - fixed value
           - {name: codigo_respuesta_2, offset: 42, length: 2, encoding: ebcdic, value: "00"} # F015.01
           - {name: separador, offset: 44, length: 1, encoding: ebcdic, value: " "} # F015.02 - " " or "@"
-          - {name: codigo_autorizacion, offset: 45, length: 8, encoding: ebcdic, value: "00162352"} # F015.03
+          - {name: codigo_autorizacion, source: random, offset: 45, length: 8, encoding: ebcdic} # F015.03 - system-generated per transaction, randomized
           - name: descripcion_respuesta # F015.04 - last sub-field of Info_Gral_Texto above
             offset: 53
             length: 27
