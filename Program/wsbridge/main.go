@@ -184,9 +184,9 @@ function connect() {
 	document.getElementById('endpoint').textContent = wsUrl;
 	console.log('Connecting to:', wsUrl);
 	ws = new WebSocket(wsUrl);
-	ws.onopen = () => log('✅ Connected to ' + wsUrl);
-	ws.onmessage = (e) => log('📨 Received: ' + e.data);
-	ws.onerror = (e) => log('❌ Error: ' + e);
+	ws.onopen = () => log('Connected to ' + wsUrl);
+	ws.onmessage = (e) => log('Received: ' + e.data);
+	ws.onerror = (e) => log('Error: ' + e);
 	ws.onclose = () => { log('Connection closed'); ws = null; };
 }
 
@@ -194,15 +194,15 @@ function sendHex() {
 	if (!ws) connect();
 	setTimeout(() => {
 		const hex = document.getElementById('hexInput').value.trim();
-		if (!hex) return log('⚠️ No data entered');
-		log('📤 Sending: ' + hex);
+		if (!hex) return log('No data entered');
+		log('Sending: ' + hex);
 		ws.send(hex);
 	}, 100);
 }
 
 function disconnect() {
 	if (ws) { ws.close(); ws = null; }
-	log('🔌 Disconnected manually');
+	log('Disconnected manually');
 }
 
 function log(msg) {
@@ -216,10 +216,10 @@ function log(msg) {
 	})
 
 	addr := fmt.Sprintf(":%d", *wsPort)
-	log.Printf("🚀 WebSocket-to-TCP bridge starting on %s", addr)
-	log.Printf("📡 WebSocket endpoint: ws://localhost:%d/ws", *wsPort)
-	log.Printf("🎯 TCP backend: %s:%d", *tcpHost, *tcpPort)
-	log.Printf("🌐 Web interface: http://localhost:%d/", *wsPort)
+	log.Printf("WebSocket-to-TCP bridge starting on %s", addr)
+	log.Printf("WebSocket endpoint: ws://localhost:%d/ws", *wsPort)
+	log.Printf("TCP backend: %s:%d", *tcpHost, *tcpPort)
+	log.Printf("Web interface: http://localhost:%d/", *wsPort)
 
 	if err := http.ListenAndServe(addr, nil); err != nil {
 		log.Fatalf("Server failed: %v", err)
