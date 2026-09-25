@@ -100,6 +100,8 @@ _NEW_RUN = {
     "run_id": 0,
     "status": "stopped",
     "ports": [],
+    "bridgeProcesses": [],
+    "wsPorts": [],
     "outcomeName": None,
     "pinnedCode": None,
     "startedAt": None,
@@ -171,17 +173,23 @@ def _stop_locked(stub_name):
     if not run:
         return
     proc = run["process"]
+    bridge_procs = run["bridgeProcesses"]
     timer = run["timer"]
     run["process"] = None
+    run["bridgeProcesses"] = []
+    run["wsPorts"] = []
     run["timer"] = None
     if timer:
         timer.cancel()
-    if proc and proc.poll() is None:
-        proc.terminate()
-        try:
-            proc.wait(timeout=5)
-        except subprocess.TimeoutExpired:
-            proc.kill()
+    for p in [proc, *bridge_procs]:
+        if p and p.poll() is None:
+            p.terminate()
+    for p in [proc, *bridge_procs]:
+        if p and p.poll() is None:
+            try:
+                p.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                p.kill()
     run["status"] = "stopped"
 
 
@@ -194,6 +202,29 @@ def _expire(stub_name, run_id):
         ttl = run["ttlMinutes"]
         _stop_locked(stub_name)
     _append_log(stub_name, f"[agent] Límite de tiempo alcanzado ({ttl} min) — deteniendo automáticamente")
+
+
+WSBRIDGE_DIR = os.path.join(PROGRAM_DIR, "wsbridge")
+
+
+def _ws_port_for(tcp_port):
+    # Deterministic so a caller can work out where to connect without us
+    # having to report it separately - good enough at this scale (a
+    # handful of stub ports, all in the 8000s).
+    return tcp_port + 1000
+
+
+def _bridge_reader_thread(stub_name, proc):
+    """Pipes a wsbridge process's own output into the run's log, tagged so it's
+    obviously not stub traffic. Doesn't touch run/status - a bridge dying doesn't
+    mean the stub itself is down, just that WS/HTTP callers can't reach it until
+    the next start."""
+    for raw_line in proc.stdout:
+        line = raw_line.rstrip("\n")
+        _append_log(stub_name, f"[bridge] {line}")
+    proc.wait()
+    if proc.returncode not in (0, None):
+        _append_log(stub_name, f"[bridge] process exited with code {proc.returncode}")
 
 
 def _kill_port_squatter(port):
@@ -260,6 +291,7 @@ def start(stub_name, yaml_text, ports, outcome_name, pinned_code, ttl_minutes, o
         _stop_locked(stub_name)
         for port in ports:
             _kill_port_squatter(port)
+            _kill_port_squatter(_ws_port_for(port))
 
     stub_dir = os.path.join(DATA_DIR, stub_name)
     os.makedirs(stub_dir, exist_ok=True)
@@ -291,6 +323,41 @@ def start(stub_name, yaml_text, ports, outcome_name, pinned_code, ttl_minutes, o
         bufsize=1,
     )
 
+    # Callers that can't open a raw TCP socket (a browser, the portal) go through
+    # wsbridge instead - one instance per TCP port, each proxying WS/HTTP traffic
+    # to that port. Built fresh alongside the stub itself so it can't go stale the
+    # way the deleted-then-restored copy did.
+    bridge_bin_path = os.path.join(stub_dir, "wsbridge_bin")
+    bridge_build = subprocess.run(
+        ["go", "build", "-o", bridge_bin_path, "./wsbridge"], cwd=PROGRAM_DIR, capture_output=True, text=True
+    )
+    if bridge_build.returncode != 0:
+        proc.kill()
+        raise RuntimeError(f"go build (wsbridge) falló: {bridge_build.stderr}")
+
+    ws_ports = []
+    bridge_procs = []
+    try:
+        for port in ports:
+            ws_port = _ws_port_for(port)
+            bproc = subprocess.Popen(
+                [bridge_bin_path, "-ws-port", str(ws_port), "-tcp-host", "127.0.0.1", "-tcp-port", str(port)],
+                cwd=PROGRAM_DIR,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                bufsize=1,
+            )
+            bridge_procs.append(bproc)
+            ws_ports.append(ws_port)
+    except OSError as exc:
+        proc.kill()
+        for bproc in bridge_procs:
+            bproc.kill()
+        raise RuntimeError(f"No se pudo iniciar wsbridge: {exc}")
+
     now = time.time()
     with _LOCK:
         _LOGS[stub_name] = []
@@ -303,6 +370,8 @@ def start(stub_name, yaml_text, ports, outcome_name, pinned_code, ttl_minutes, o
         run.update(
             {
                 "process": proc,
+                "bridgeProcesses": bridge_procs,
+                "wsPorts": ws_ports,
                 "timer": timer,
                 "status": "running",
                 "ports": ports,
@@ -319,6 +388,8 @@ def start(stub_name, yaml_text, ports, outcome_name, pinned_code, ttl_minutes, o
         )
     timer.start()
     threading.Thread(target=_reader_thread, args=(stub_name, proc, run_id), daemon=True).start()
+    for bproc in bridge_procs:
+        threading.Thread(target=_bridge_reader_thread, args=(stub_name, bproc), daemon=True).start()
     return status()
 
 
@@ -336,7 +407,7 @@ def stop(stub_name, owner_id):
 def status():
     with _LOCK:
         runs = {
-            name: {k: v for k, v in run.items() if k not in ("process", "timer")}
+            name: {k: v for k, v in run.items() if k not in ("process", "timer", "bridgeProcesses")}
             for name, run in _RUNS.items()
         }
         active_count = sum(1 for r in runs.values() if r["status"] == "running")
