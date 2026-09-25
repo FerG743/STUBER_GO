@@ -210,17 +210,17 @@ func (s *TCPStubServer) handleConnection(conn net.Conn, port int, stubs []*TCPSt
 		if stub.Label != "" {
 			who = fmt.Sprintf("%s — stub %q", stub.Label, stub.Name)
 		}
-		log.Printf("[TCP:%d] ▶ Matched %s, %s", port, who, why)
+		log.Printf("[TCP:%d] Matched %s, %s", port, who, why)
 
 		if stub.ValidateRequest {
 			valid, reason := s.validateRequest(data, stub)
 			if !valid {
-				log.Printf("[TCP:%s] ❌ Validation failed: %s", stub.Name, reason)
+				log.Printf("[TCP:%s] Validation failed: %s", stub.Name, reason)
 				log.Printf("[TCP:%s] Simulating timeout (no response sent)", stub.Name)
 				// Just close the connection without sending anything - simulates timeout
 				return
 			}
-			log.Printf("[TCP:%s] ✅ Validation passed", stub.Name)
+			log.Printf("[TCP:%s] Validation passed", stub.Name)
 		}
 
 		if stub.Delay > 0 {
