@@ -6,9 +6,15 @@
     "semantic_hash": ""
   },
   "Program/main.go": {
-    "mtime": 1790274503.487935,
-    "seen": 1790347344.144012,
-    "ast_hash": "95c0e65d4eab9a04165e16d7b120c9d1",
+    "mtime": 1790085747.1199076,
+    "seen": 1790085786.060541,
+    "ast_hash": "0f5956243a48e74be8dd946cd042b436",
+    "semantic_hash": ""
+  },
+  "Program/wsbridge/main.go": {
+    "mtime": 1789655165.7638657,
+    "seen": 1790085786.060543,
+    "ast_hash": "7be15f384520c6298ed9077516850f4a",
     "semantic_hash": ""
   },
   "agent/sim_agent.py": {
@@ -18,9 +24,9 @@
     "semantic_hash": ""
   },
   "Program/STUBS.yaml": {
-    "mtime": 1790345617.333242,
-    "seen": 1790347344.1440158,
-    "ast_hash": "2de7ed12992b335337cac4171ccd7044",
+    "mtime": 1790085768.736134,
+    "seen": 1790085786.060544,
+    "ast_hash": "ea1c7c588e51a50c3cf546431810696a",
     "semantic_hash": ""
   },
   "README.md": {
@@ -39,30 +45,6 @@
     "mtime": 1789745842.2785914,
     "seen": 1790085786.0605419,
     "ast_hash": "bc4ef5bb621c4665a2f7a0e9142b44fd",
-    "semantic_hash": ""
-  },
-  "Program/config.go": {
-    "mtime": 1790274433.855131,
-    "seen": 1790347344.144004,
-    "ast_hash": "5a96903f5a2b032a87b728a1973dda07",
-    "semantic_hash": ""
-  },
-  "Program/encoding.go": {
-    "mtime": 1790274495.3886836,
-    "seen": 1790347344.1440058,
-    "ast_hash": "a3171ccb8b9b19d5b4507a765b013c94",
-    "semantic_hash": ""
-  },
-  "Program/httpserver.go": {
-    "mtime": 1790274444.931318,
-    "seen": 1790347344.144011,
-    "ast_hash": "95fdb505276fcfac784f5f2fc7f1abbe",
-    "semantic_hash": ""
-  },
-  "Program/tcpserver.go": {
-    "mtime": 1790274472.5242429,
-    "seen": 1790347344.1440141,
-    "ast_hash": "17e2ee5ec0f77d4efd174eaf824c97e1",
     "semantic_hash": ""
   }
 }
