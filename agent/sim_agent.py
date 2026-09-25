@@ -31,6 +31,7 @@ import argparse
 import json
 import os
 import re
+import signal
 import socket
 import subprocess
 import threading
@@ -195,6 +196,27 @@ def _expire(stub_name, run_id):
     _append_log(stub_name, f"[agent] Límite de tiempo alcanzado ({ttl} min) — deteniendo automáticamente")
 
 
+def _kill_port_squatter(port):
+    """Best-effort: kill whatever's still bound to `port` before we start a fresh
+    process there. _stop_locked only knows about processes we're tracking in _RUNS -
+    an orphan (started outside that lifecycle, e.g. manually from a terminal, or a
+    sim_agent restart that lost track of its child) would otherwise make our new
+    process fail to bind and die immediately, leaving the orphan to keep answering
+    with whatever stale code it was built from."""
+    try:
+        found = subprocess.run(
+            ["lsof", "-ti", f"tcp:{port}", "-sTCP:LISTEN"],
+            capture_output=True, text=True, timeout=3,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return
+    for pid in found.stdout.split():
+        try:
+            os.kill(int(pid), signal.SIGKILL)
+        except (ValueError, ProcessLookupError, PermissionError):
+            pass
+
+
 def start(stub_name, yaml_text, ports, outcome_name, pinned_code, ttl_minutes, owner_id):
     try:
         ttl_minutes = int(ttl_minutes)
@@ -236,6 +258,8 @@ def start(stub_name, yaml_text, ports, outcome_name, pinned_code, ttl_minutes, o
                 f"Ya hay {MAX_CONCURRENT_STUBS} stubs activos (máximo). Detén uno antes de iniciar otro."
             )
         _stop_locked(stub_name)
+        for port in ports:
+            _kill_port_squatter(port)
 
     stub_dir = os.path.join(DATA_DIR, stub_name)
     os.makedirs(stub_dir, exist_ok=True)
