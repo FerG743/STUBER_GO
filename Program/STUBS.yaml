@@ -406,3 +406,166 @@ tcp_stubs:
             source: random
             offset: 136
             length: 9
+
+  # Plan 08 (Compra Seteo NIP Banda) - shares port 8101 with Plan 86 (BASE24 multiplexes
+  # every transaction code over one connection, distinguished by Codigo_Transaccion at
+  # wire[21] - see the comment on the Plan 86 match block above). Request is 205 bytes on
+  # the wire (2-byte length prefix + 203-byte SPDH payload) = 410 hex chars.
+  - name: tcp-protocol-08
+    label: "Plan 08 (Compra Seteo NIP Banda)"
+    port: 8101
+    meta:
+      id: compra_seteo_nip_banda
+      category: spdh
+      display_name: "Plan 08 (Compra Seteo NIP Banda)"
+      description: "Switch Base24, Compra Tarjeta Departamental (Dilisa/Tarjeta Dptal Suburbia) con Seteo de NIP para tarjeta de banda (Tipo_Mensaje=\"1\"). Request de 410 caracteres hex; fuera de eso la conexión se cierra en silencio."
+      # Real capture - the portal's "Enviar al stub" sends this.
+      sample_request_hex: "00cbf0f8d3e5f0f0f0f2f100000003f10197990008080000009500000000001300009012220604f2f0f0f0f1f0f0f0f0f0f4f0f0f0f025010300000000090001020202000600043d09080102050001000000000006090800000000004643334631303644444439413538324332342d32462d46412d31312d32372d3245505830303030303030303030334c323032393239ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff098800012826303030353430"
+    match:
+      offset: 21
+      value: "08"
+    validate_request: true
+    min_length: 410
+    max_length: 410
+    close_after: true
+    # Cross-checked against the SPDH Messages Dictionary for transaction code "08"
+    # (Compra Seteo NIP Banda). Field mapping (wire offset = spec payload offset + 2
+    # for the length prefix):
+    #   F009 Codigo_Transaccion  wire[21]     "08" (fixed, both variants)
+    #   F010 Codigo_Respuesta    wire[22]     "01" Aprobado / "02" Declinado / "04" Sin sistema, Time out
+    #   F015 Info_Gral_Texto     wire[42:80]  compound field - codigo_respuesta_2/estatus_seteo_nip/
+    #                                         codigo_autorizacion/descripcion_respuesta below
+    # Everything from wire[82:] onward (F017 Info_Gral_Usuario) is a vendor/proprietary blob the
+    # SPDH dictionary marks "Relleno FF's" - the real capture below shows mostly FF's/EBCDIC-space
+    # padding with a non-FF tail (1c65), kept verbatim rather than forced to the documented FF's.
+    responses:
+      # Captured verbatim from a real trace (Tipo_Mensaje=1, Seteo de NIP -> NIP Generado).
+      - name: APROBADA
+        weight: 1
+        length: 262
+        fields:
+          - name: frame_prefix
+            offset: 0
+            length: 2
+            encoding: hex
+            value: "0104"
+          - {name: version_vtol, echo: true, offset: 2, length: 2}
+          - {name: formato_negocio, echo: true, offset: 4, length: 2}
+          - {name: numero_tienda, echo: true, offset: 6, length: 4}
+          - {name: reservado_tienda, echo: true, offset: 10, length: 1} # F003.02 - "Campo sin uso"
+          - {name: filler_1, echo: true, offset: 11, length: 2}
+          - {name: id_terminal, echo: true, offset: 13, length: 2}
+          - {name: tipo_mensaje, echo: true, offset: 15, length: 1}
+          - {name: reservado_boleta, echo: true, offset: 16, length: 1} # F007.01 - "Campo sin uso"
+          - {name: id_boleta, echo: true, offset: 17, length: 2} # F007.02
+          - {name: consecutivo_mensaje, echo: true, offset: 19, length: 2} # F008
+          - {name: codigo_transaccion, echo: true, offset: 21, length: 1} # F009
+          - {name: codigo_respuesta, offset: 22, length: 1, encoding: bcd, value: "01"} # F010 - "01" Aprobado
+          # F011 Monto: dictionary lists the response's own value as fixed "Ceros", but reflecting
+          # the request's actual amount is more useful for testing than a canned constant - echo it.
+          - {name: monto, echo: true, offset: 23, length: 4}
+          # F012 Referencia_ACC: unlike Plan 86, the real capture shows the response echoing the
+          # exact same PAN the request sent (not a system-generated value) - echo it.
+          - {name: referencia_acc, echo: true, offset: 27, length: 12}
+          - {name: indicadores_2, offset: 39, length: 2, encoding: ebcdic, value: "11"} # F013 - fixed value
+          - {name: longitud_info_gral_texto, offset: 41, length: 1, encoding: bcd, value: "38"} # F014 - fixed value
+          - {name: codigo_respuesta_2, offset: 42, length: 2, encoding: ebcdic, value: "00"} # F015.01
+          - {name: estatus_seteo_nip, offset: 44, length: 1, encoding: ebcdic, value: "1"} # F015.02 - "1" NIP Generado
+          - {name: codigo_autorizacion, source: random, offset: 45, length: 8, encoding: ebcdic} # F015.03 - system-generated, randomized
+          - name: descripcion_respuesta # F015.04
+            offset: 53
+            length: 27
+            encoding: ebcdic
+            value: "        APROBADA           " # captured verbatim - 8 spaces + "APROBADA" + 11 spaces = 27 chars
+          - {name: longitud_info_gral_usuario, offset: 80, length: 2, encoding: hex, value: "ffff"} # F016 - fixed FF's
+          - name: info_gral_usuario
+            offset: 82
+            length: 180
+            encoding: hex
+            value: "ffffffffffffff4040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040000240404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040401c65"
+
+      # DRAFT / UNVERIFIED - not a captured trace. Built from APROBADA above with: codigo_respuesta
+      # "02", estatus_seteo_nip "2" (NIP No Generado) and the F015.04 description swapped. Swap in a
+      # real declined capture when one shows up.
+      - name: DECLINADA
+        weight: 1
+        length: 262
+        fields:
+          - name: frame_prefix
+            offset: 0
+            length: 2
+            encoding: hex
+            value: "0105"
+          - {name: version_vtol, echo: true, offset: 2, length: 2}
+          - {name: formato_negocio, echo: true, offset: 4, length: 2}
+          - {name: numero_tienda, echo: true, offset: 6, length: 4}
+          - {name: reservado_tienda, echo: true, offset: 10, length: 1}
+          - {name: filler_1, echo: true, offset: 11, length: 2}
+          - {name: id_terminal, echo: true, offset: 13, length: 2}
+          - {name: tipo_mensaje, echo: true, offset: 15, length: 1}
+          - {name: reservado_boleta, echo: true, offset: 16, length: 1}
+          - {name: id_boleta, echo: true, offset: 17, length: 2}
+          - {name: consecutivo_mensaje, echo: true, offset: 19, length: 2}
+          - {name: codigo_transaccion, echo: true, offset: 21, length: 1}
+          - {name: codigo_respuesta, offset: 22, length: 1, encoding: bcd, value: "02"} # F010 - "02" Declinado
+          - {name: monto, echo: true, offset: 23, length: 4}
+          - {name: referencia_acc, echo: true, offset: 27, length: 12}
+          - {name: indicadores_2, offset: 39, length: 2, encoding: ebcdic, value: "11"}
+          - {name: longitud_info_gral_texto, offset: 41, length: 1, encoding: bcd, value: "38"}
+          - {name: codigo_respuesta_2, offset: 42, length: 2, encoding: ebcdic, value: "00"}
+          - {name: estatus_seteo_nip, offset: 44, length: 1, encoding: ebcdic, value: "2"} # F015.02 - "2" NIP No Generado
+          - {name: codigo_autorizacion, source: random, offset: 45, length: 8, encoding: ebcdic}
+          - name: descripcion_respuesta
+            offset: 53
+            length: 27
+            encoding: ebcdic
+            value: "        DECLINADA          " # 8 spaces + "DECLINADA" + 10 spaces = 27 chars
+          - {name: longitud_info_gral_usuario, offset: 80, length: 2, encoding: hex, value: "ffff"} # F016 - fixed FF's
+          - name: info_gral_usuario
+            offset: 82
+            length: 180
+            encoding: hex
+            value: "ffffffffffffff4040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040000240404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040401c65"
+
+      # DRAFT / UNVERIFIED - not a captured trace. F010 "04" = "Sin sistema, Time out" is documented
+      # in the SPDH dictionary but we have no real sample. Built from APROBADA with codigo_respuesta
+      # "04", estatus_seteo_nip " " (no status determined) and the F015.04 description swapped.
+      - name: SIN_SISTEMA
+        weight: 1
+        length: 262
+        fields:
+          - name: frame_prefix
+            offset: 0
+            length: 2
+            encoding: hex
+            value: "0104"
+          - {name: version_vtol, echo: true, offset: 2, length: 2}
+          - {name: formato_negocio, echo: true, offset: 4, length: 2}
+          - {name: numero_tienda, echo: true, offset: 6, length: 4}
+          - {name: reservado_tienda, echo: true, offset: 10, length: 1}
+          - {name: filler_1, echo: true, offset: 11, length: 2}
+          - {name: id_terminal, echo: true, offset: 13, length: 2}
+          - {name: tipo_mensaje, echo: true, offset: 15, length: 1}
+          - {name: reservado_boleta, echo: true, offset: 16, length: 1}
+          - {name: id_boleta, echo: true, offset: 17, length: 2}
+          - {name: consecutivo_mensaje, echo: true, offset: 19, length: 2}
+          - {name: codigo_transaccion, echo: true, offset: 21, length: 1}
+          - {name: codigo_respuesta, offset: 22, length: 1, encoding: bcd, value: "04"} # F010 - "04" Sin sistema, Time out
+          - {name: monto, echo: true, offset: 23, length: 4}
+          - {name: referencia_acc, echo: true, offset: 27, length: 12}
+          - {name: indicadores_2, offset: 39, length: 2, encoding: ebcdic, value: "11"}
+          - {name: longitud_info_gral_texto, offset: 41, length: 1, encoding: bcd, value: "38"}
+          - {name: codigo_respuesta_2, offset: 42, length: 2, encoding: ebcdic, value: "00"}
+          - {name: estatus_seteo_nip, offset: 44, length: 1, encoding: ebcdic, value: " "} # F015.02 - sin estatus
+          - {name: codigo_autorizacion, source: random, offset: 45, length: 8, encoding: ebcdic}
+          - name: descripcion_respuesta
+            offset: 53
+            length: 27
+            encoding: ebcdic
+            value: "   SIN SISTEMA - TIMEOUT  " # 3 spaces + "SIN SISTEMA - TIMEOUT" + 2 spaces = 27 chars (padded)
+          - {name: longitud_info_gral_usuario, offset: 80, length: 2, encoding: hex, value: "ffff"} # F016 - fixed FF's
+          - name: info_gral_usuario
+            offset: 82
+            length: 180
+            encoding: hex
+            value: "ffffffffffffff4040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040000240404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040404040401c65"
